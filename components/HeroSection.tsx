@@ -368,8 +368,8 @@ export default function HeroSection() {
             alpha: false,
             antialias: !isMobile,
             powerPreference: "high-performance",
-            shadows: false,
           }}
+          shadows={false}
           className="!absolute inset-0 md:!left-[34%] md:!right-0 md:!w-[66%]"
           aria-hidden="true"
         >
