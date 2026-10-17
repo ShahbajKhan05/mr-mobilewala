@@ -1,83 +1,48 @@
 "use client";
 
 import { Suspense, useEffect, useRef, useState } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
-import {
-  Environment,
-  Lightformer,
-  useGLTF,
-} from "@react-three/drei";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Environment, Lightformer, useGLTF } from "@react-three/drei";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import * as THREE from "three";
-import BrandLogo from "@/components/BrandLogo";
+import Link from "next/link";
 
-const FOLDABLE_MODEL_PATH =
-  "/models/iphone-duo-fold.glb";
+const FOLDABLE_MODEL_PATH = "/models/iphone-duo-fold.glb";
 const IPHONE_MODEL_PATH = "/phone/source/phone.glb";
-const SAMSUNG_MODEL_PATH = "/phone/source/samsung_galaxy_s25_ultra.glb";
 const FOLDABLE_CENTER = [-0.000208, -0.059132, 0.003058] as const;
 const IPHONE_CENTER = [0, -0.075, 0.0024] as const;
-const SAMSUNG_CENTER = [-0.0043, 0.0004, 0.0017] as const;
-const SCENE_LABELS = [
-  "01 / FORM",
-  "02 / DISPLAY",
-  "03 / PRECISION ORBIT",
-  "04 / MR MOBILE WALA",
-  "05 / IPHONE",
-  "06 / GALAXY",
-];
 
 interface ScrollSceneState {
   foldableYaw: number;
   foldableX: number;
-  foldableScale: number;
   iphoneYaw: number;
   iphoneX: number;
-  iphoneScale: number;
-  samsungYaw: number;
-  samsungX: number;
-  samsungScale: number;
   cameraAzimuth: number;
   cameraElevation: number;
   cameraRadius: number;
   targetX: number;
   targetY: number;
-  targetZ: number;
-  fov: number;
   fold: number;
-  keyX: number;
-  keyY: number;
-  keyZ: number;
-  keyIntensity: number;
-  fillIntensity: number;
-  rimIntensity: number;
+  entrance: number;
+  parallaxX: number;
+  parallaxY: number;
 }
 
 const INITIAL_SCENE_STATE: ScrollSceneState = {
-  foldableYaw: -0.04,
-  foldableX: 0,
-  foldableScale: 9.7,
+  foldableYaw: -0.12,
+  foldableX: -0.37,
   iphoneYaw: -0.12,
-  iphoneX: 0,
-  iphoneScale: 0,
-  samsungYaw: -0.12,
-  samsungX: 0,
-  samsungScale: 0,
-  cameraAzimuth: 0.22,
-  cameraElevation: 0.09,
-  cameraRadius: 4.45,
+  iphoneX: 0.35,
+  cameraAzimuth: 0.12,
+  cameraElevation: 0.08,
+  cameraRadius: 4.55,
   targetX: 0,
   targetY: 0,
-  targetZ: 0,
-  fov: 34,
   fold: 0,
-  keyX: -3.5,
-  keyY: 4,
-  keyZ: 5,
-  keyIntensity: 2.5,
-  fillIntensity: 1.1,
-  rimIntensity: 1.25,
+  entrance: 1,
+  parallaxX: 0,
+  parallaxY: 0,
 };
 
 function correctFoldableScreenTexture(scene: THREE.Group) {
@@ -134,25 +99,30 @@ function correctFoldableScreenTexture(scene: THREE.Group) {
   };
 }
 
-function PhoneModels({
+function FoldablePhone({
   stateRef,
-  loadIphone,
-  loadSamsung,
+  invalidateRef,
 }: {
   stateRef: React.RefObject<ScrollSceneState>;
-  loadIphone: boolean;
-  loadSamsung: boolean;
+  invalidateRef: { current: (() => void) | null };
 }) {
-  const foldableRef = useRef<THREE.Group>(null);
+  const rigRef = useRef<THREE.Group>(null);
   const foldActionRef = useRef<THREE.AnimationAction | null>(null);
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
   const foldDurationRef = useRef(0);
-  const foldable = useGLTF(FOLDABLE_MODEL_PATH);
-  const cameraFovRef = useRef(INITIAL_SCENE_STATE.fov);
+  const { scene, animations } = useGLTF(FOLDABLE_MODEL_PATH);
+  const invalidate = useThree((state) => state.invalidate);
 
   useEffect(() => {
-    const restoreScreenMaterials = correctFoldableScreenTexture(foldable.scene);
-    const foldClip = foldable.animations.find((clip) => clip.name === "open-close");
+    invalidateRef.current = invalidate;
+    return () => {
+      invalidateRef.current = null;
+    };
+  }, [invalidate, invalidateRef]);
+
+  useEffect(() => {
+    const restoreScreenMaterials = correctFoldableScreenTexture(scene);
+    const foldClip = animations.find((clip) => clip.name === "open-close");
     if (!foldClip) {
       restoreScreenMaterials();
       throw new Error(
@@ -160,7 +130,7 @@ function PhoneModels({
       );
     }
 
-    const mixer = new THREE.AnimationMixer(foldable.scene);
+    const mixer = new THREE.AnimationMixer(scene);
     const action = mixer.clipAction(foldClip);
     action.setLoop(THREE.LoopOnce, 1);
     action.clampWhenFinished = true;
@@ -178,36 +148,37 @@ function PhoneModels({
       mixerRef.current = null;
       restoreScreenMaterials();
     };
-  }, [foldable.animations, foldable.scene]);
+  }, [animations, scene]);
 
-  useFrame(({ camera }) => {
-    const foldableRig = foldableRef.current;
-    if (!foldableRig) return;
+  useFrame(({ camera, size }) => {
+    const rig = rigRef.current;
+    if (!rig) return;
 
     const state = stateRef.current;
-    foldableRig.position.x = state.foldableX;
-    foldableRig.rotation.set(0, state.foldableYaw, 0);
-    foldableRig.scale.setScalar(state.foldableScale);
-    foldableRig.visible = state.foldableScale > 0.001;
+    const mobile = size.width < 640;
+    const entranceOffset = (1 - state.entrance) * 0.18;
+    rig.rotation.set(0, state.foldableYaw + state.parallaxX * 0.035, 0);
+    rig.position.set(
+      (mobile ? -0.28 : state.foldableX) + state.parallaxX * 0.12,
+      (mobile ? -0.42 : 0) + state.parallaxY * 0.1 - entranceOffset,
+      0.04,
+    );
+    rig.scale.setScalar((mobile ? 7.45 : 8.5) * state.entrance);
 
-    const isPortrait =
-      camera instanceof THREE.PerspectiveCamera && camera.aspect < 0.72;
-    const orbitRadius = state.cameraRadius * (isPortrait ? 1.18 : 1);
-    const horizontalRadius = orbitRadius * Math.cos(state.cameraElevation);
+    const radius = mobile
+      ? size.width < 370
+        ? 7.8
+        : size.width < 430
+          ? 7
+          : 6.2
+      : state.cameraRadius;
+    const horizontalRadius = radius * Math.cos(state.cameraElevation);
     camera.position.set(
       state.targetX + Math.sin(state.cameraAzimuth) * horizontalRadius,
-      state.targetY + Math.sin(state.cameraElevation) * orbitRadius,
-      state.targetZ + Math.cos(state.cameraAzimuth) * horizontalRadius,
+      state.targetY + Math.sin(state.cameraElevation) * radius,
+      Math.cos(state.cameraAzimuth) * horizontalRadius,
     );
-    camera.lookAt(state.targetX, state.targetY, state.targetZ);
-    if (
-      camera instanceof THREE.PerspectiveCamera &&
-      Math.abs(cameraFovRef.current - state.fov) > 0.001
-    ) {
-      camera.fov = state.fov;
-      camera.updateProjectionMatrix();
-      cameraFovRef.current = state.fov;
-    }
+    camera.lookAt(state.targetX, state.targetY, 0);
 
     const action = foldActionRef.current;
     const mixer = mixerRef.current;
@@ -219,25 +190,13 @@ function PhoneModels({
   });
 
   return (
-    <>
-      <group ref={foldableRef}>
-        <group rotation={[0, 0, Math.PI / 2]}>
-          <group position={[...FOLDABLE_CENTER]}>
-            <primitive object={foldable.scene} dispose={null} />
-          </group>
+    <group ref={rigRef}>
+      <group rotation={[0, 0, Math.PI / 2]}>
+        <group position={[...FOLDABLE_CENTER]}>
+          <primitive object={scene} dispose={null} />
         </group>
       </group>
-      {loadIphone && (
-        <Suspense fallback={null}>
-          <IphoneModel stateRef={stateRef} />
-        </Suspense>
-      )}
-      {loadSamsung && (
-        <Suspense fallback={null}>
-          <SamsungModel stateRef={stateRef} />
-        </Suspense>
-      )}
-    </>
+    </group>
   );
 }
 
@@ -249,19 +208,24 @@ function IphoneModel({
   const rigRef = useRef<THREE.Group>(null);
   const { scene } = useGLTF(IPHONE_MODEL_PATH);
 
-  useFrame(() => {
+  useFrame(({ size }) => {
     const rig = rigRef.current;
     if (!rig) return;
 
+    const mobile = size.width < 640;
     const state = stateRef.current;
-    rig.position.x = state.iphoneX;
-    rig.rotation.y = state.iphoneYaw;
-    rig.scale.setScalar(state.iphoneScale);
-    rig.visible = state.iphoneScale > 0.001;
+    const entranceOffset = (1 - state.entrance) * 0.18;
+    rig.position.set(
+      (mobile ? 0.28 : state.iphoneX) + state.parallaxX * 0.12,
+      (mobile ? -0.42 : 0) + state.parallaxY * 0.1 - entranceOffset,
+      -0.04,
+    );
+    rig.rotation.y = state.iphoneYaw + state.parallaxX * 0.035;
+    rig.scale.setScalar((mobile ? 7.45 : 8.35) * state.entrance);
   });
 
   return (
-    <group ref={rigRef} scale={0}>
+    <group ref={rigRef}>
       <group position={[...IPHONE_CENTER]}>
         <primitive object={scene} dispose={null} />
       </group>
@@ -269,104 +233,36 @@ function IphoneModel({
   );
 }
 
-function SamsungModel({
-  stateRef,
-}: {
-  stateRef: React.RefObject<ScrollSceneState>;
-}) {
-  const rigRef = useRef<THREE.Group>(null);
-  const { scene } = useGLTF(SAMSUNG_MODEL_PATH);
-
-  useFrame(() => {
-    const rig = rigRef.current;
-    if (!rig) return;
-
-    const state = stateRef.current;
-    rig.position.x = state.samsungX;
-    rig.rotation.y = state.samsungYaw;
-    rig.scale.setScalar(state.samsungScale);
-    rig.visible = state.samsungScale > 0.001;
-  });
-
-  return (
-    <group ref={rigRef} scale={0}>
-      <group position={[...SAMSUNG_CENTER]}>
-        <primitive object={scene} dispose={null} />
-      </group>
-    </group>
-  );
-}
-
-function StudioLighting({
-  stateRef,
-}: {
-  stateRef: React.RefObject<ScrollSceneState>;
-}) {
-  const keyRef = useRef<THREE.DirectionalLight>(null);
-  const fillRef = useRef<THREE.DirectionalLight>(null);
-  const rimRef = useRef<THREE.DirectionalLight>(null);
-
-  useFrame(() => {
-    const state = stateRef.current;
-    if (keyRef.current) {
-      keyRef.current.position.set(state.keyX, state.keyY, state.keyZ);
-      keyRef.current.intensity = state.keyIntensity;
-    }
-    if (fillRef.current) fillRef.current.intensity = state.fillIntensity;
-    if (rimRef.current) rimRef.current.intensity = state.rimIntensity;
-  });
-
-  return (
-    <>
-      <ambientLight intensity={0.65} />
-      <hemisphereLight args={["#ffffff", "#c7c4bd", 0.9]} />
-      <directionalLight
-        ref={keyRef}
-        color="#fffaf0"
-        intensity={INITIAL_SCENE_STATE.keyIntensity}
-        position={[
-          INITIAL_SCENE_STATE.keyX,
-          INITIAL_SCENE_STATE.keyY,
-          INITIAL_SCENE_STATE.keyZ,
-        ]}
-      />
-      <directionalLight
-        ref={fillRef}
-        color="#fff3df"
-        intensity={INITIAL_SCENE_STATE.fillIntensity}
-        position={[3, 0.5, 4]}
-      />
-      <directionalLight
-        ref={rimRef}
-        color="#cbd9e6"
-        intensity={INITIAL_SCENE_STATE.rimIntensity}
-        position={[4, 1.5, -3]}
-      />
-      <pointLight
-        color="#fff1dc"
-        intensity={2}
-        distance={6}
-        position={[0, -2.5, 3]}
-      />
-    </>
-  );
-}
 export default function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  const logoRef = useRef<HTMLDivElement>(null);
-  const sceneLabelsRef = useRef<Array<HTMLParagraphElement | null>>([]);
   const sceneStateRef = useRef<ScrollSceneState>({ ...INITIAL_SCENE_STATE });
-  const [loadIphone, setLoadIphone] = useState(false);
-  const [loadSamsung, setLoadSamsung] = useState(false);
-  const requestedModelsRef = useRef({ iphone: false, samsung: false });
+  const invalidateRef = useRef<(() => void) | null>(null);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    );
+    const mobileViewport = window.matchMedia("(max-width: 767px)");
+    const updatePreferences = () => {
+      setPrefersReducedMotion(reducedMotion.matches);
+      setIsMobile(mobileViewport.matches);
+    };
+
+    updatePreferences();
+    reducedMotion.addEventListener("change", updatePreferences);
+    mobileViewport.addEventListener("change", updatePreferences);
+
+    return () => {
+      reducedMotion.removeEventListener("change", updatePreferences);
+      mobileViewport.removeEventListener("change", updatePreferences);
+    };
+  }, []);
 
   useEffect(() => {
     const section = sectionRef.current;
-    const logo = logoRef.current;
-    const sceneLabels = sceneLabelsRef.current.filter(
-      (label): label is HTMLParagraphElement => label !== null,
-    );
-    if (!section || !logo || sceneLabels.length !== SCENE_LABELS.length) return;
+    if (!section) return;
 
     gsap.registerPlugin(ScrollTrigger);
     const media = gsap.matchMedia();
@@ -374,40 +270,23 @@ export default function HeroSection() {
     media.add("(prefers-reduced-motion: no-preference)", () => {
       const scene = sceneStateRef.current;
       Object.assign(scene, INITIAL_SCENE_STATE);
-      requestedModelsRef.current = { iphone: false, samsung: false };
-      setLoadIphone(false);
-      setLoadSamsung(false);
-      gsap.set(logo, {
-        autoAlpha: 0,
-        scale: 0.96,
-        y: 18,
-        x: 0,
-        clipPath: "inset(0 100% 0 0)",
-      });
-      gsap.set(sceneLabels, { autoAlpha: 0, y: 8 });
+      scene.entrance = 0;
 
-      const requestModelsForProgress = (progress: number) => {
-        if (progress >= 0.52 && !requestedModelsRef.current.iphone) {
-          requestedModelsRef.current.iphone = true;
-          setLoadIphone(true);
-        }
-        if (progress >= 0.75 && !requestedModelsRef.current.samsung) {
-          requestedModelsRef.current.samsung = true;
-          setLoadSamsung(true);
-        }
-      };
+      const entranceTween = gsap.to(scene, {
+        entrance: 1,
+        duration: 1,
+        ease: "power3.out",
+        onUpdate: () => invalidateRef.current?.(),
+      });
 
       const timeline = gsap.timeline({
         scrollTrigger: {
           trigger: section,
           start: "top top",
-          end: "+=4800",
-          pin: section,
-          pinSpacing: true,
-          anticipatePin: 1,
-          scrub: 0.45,
+          end: "bottom bottom",
+          scrub: 0.7,
           invalidateOnRefresh: true,
-          onUpdate: (self) => requestModelsForProgress(self.progress),
+          onUpdate: () => invalidateRef.current?.(),
         },
       });
 
@@ -415,371 +294,51 @@ export default function HeroSection() {
         .to(
           scene,
           {
-            foldableScale: 10.2,
-            foldableYaw: -0.06,
             cameraAzimuth: 0.38,
-            cameraElevation: 0.11,
-            cameraRadius: 4.05,
-            fov: 32,
-            keyX: -4,
-            keyY: 4.5,
-            keyZ: 4.5,
-            keyIntensity: 2.35,
-            fillIntensity: 0.9,
-            duration: 0.08,
-            ease: "power2.out",
+            cameraElevation: 0.12,
+            fold: 1,
+            duration: 1,
+            ease: "sine.inOut",
           },
           0,
-        )
-        .to(
-          scene,
-          {
-            foldableYaw: 0,
-            cameraAzimuth: 0.035,
-            cameraElevation: 0.025,
-            cameraRadius: 3.72,
-            targetY: 0.055,
-            fov: 28,
-            fold: 0.28,
-            keyX: -4.5,
-            keyY: 1.2,
-            keyZ: 4,
-            keyIntensity: 2.05,
-            rimIntensity: 1.15,
-            duration: 0.08,
-            ease: "sine.inOut",
-          },
-          0.08,
-        )
-        .to(
-          scene,
-          {
-            cameraAzimuth: 1.42,
-            cameraElevation: 0.075,
-            cameraRadius: 3.95,
-            targetX: 0.025,
-            targetY: 0.015,
-            fold: 0.58,
-            keyX: 0.5,
-            keyY: 2,
-            keyZ: 4.5,
-            keyIntensity: 2.4,
-            fillIntensity: 0.72,
-            rimIntensity: 1.55,
-            duration: 0.08,
-            ease: "sine.inOut",
-          },
-          0.08,
-        )
-        .to(
-          scene,
-          {
-            cameraAzimuth: 2.8,
-            cameraElevation: 0.16,
-            cameraRadius: 4.25,
-            targetX: -0.02,
-            targetY: 0.025,
-            fov: 31,
-            fold: 0.86,
-            keyX: 3.5,
-            keyY: 3,
-            keyZ: -4.5,
-            keyIntensity: 2.25,
-            fillIntensity: 0.85,
-            rimIntensity: 1.65,
-            duration: 0.08,
-            ease: "sine.inOut",
-          },
-          0.24,
-        )
-        .to(
-          scene,
-          {
-            cameraAzimuth: 3.3,
-            cameraElevation: 0.42,
-            cameraRadius: 4.55,
-            targetX: 0,
-            targetY: 0,
-            fold: 1,
-            keyX: -1,
-            keyY: 4.5,
-            keyZ: -4,
-            keyIntensity: 2.5,
-            duration: 0.06,
-            ease: "sine.inOut",
-          },
-          0.32,
-        )
-        .to(
-          scene,
-          {
-            foldableScale: 0,
-            foldableX: -0.65,
-            cameraRadius: 4.75,
-            cameraAzimuth: 3.55,
-            duration: 0.055,
-            ease: "power2.in",
-          },
-          0.38,
-        )
-        .to(
-          logo,
-          {
-            autoAlpha: 1,
-            scale: 1,
-            y: 0,
-            x: 0,
-            clipPath: "inset(0 0% 0 0)",
-            duration: 0.075,
-            ease: "power3.out",
-          },
-          0.405,
-        )
-        .to(
-          logo,
-          {
-            scale: 1.01,
-            duration: 0.025,
-            ease: "sine.inOut",
-          },
-          0.48,
-        )
-        .to(
-          logo,
-          {
-            autoAlpha: 0,
-            scale: 0.94,
-            y: -18,
-            x: -24,
-            clipPath: "inset(0 0 0 100%)",
-            duration: 0.06,
-            ease: "power2.in",
-          },
-          0.51,
-        )
-        .to(
-          scene,
-          {
-            cameraAzimuth: Math.PI * 2 + 0.38,
-            cameraRadius: 4.55,
-            targetX: 0,
-            targetY: 0,
-            duration: 0.09,
-            ease: "sine.inOut",
-          },
-          0.46,
-        )
-        .to(
-          scene,
-          {
-            iphoneScale: 10.2,
-            foldableScale: 0,
-            samsungScale: 0,
-            iphoneYaw: -0.2,
-            iphoneX: 0.45,
-            cameraAzimuth: Math.PI * 2 + 0.38,
-            cameraElevation: 0.09,
-            cameraRadius: 4.55,
-            targetX: 0,
-            targetY: 0,
-            fov: 33,
-            keyX: -3.8,
-            keyY: 3.5,
-            keyZ: 4,
-            keyIntensity: 2.4,
-            fillIntensity: 0.9,
-            rimIntensity: 1.25,
-            duration: 0.04,
-            ease: "power2.out",
-          },
-          0.55,
-        )
-        .to(
-          scene,
-          {
-            iphoneX: 0,
-            cameraAzimuth: Math.PI * 2 + 0.035,
-            cameraElevation: 0.02,
-            cameraRadius: 3.68,
-            targetY: 0.045,
-            fov: 32,
-            keyX: -4.2,
-            keyY: 1.3,
-            keyZ: 4,
-            keyIntensity: 1.95,
-            duration: 0.06,
-            ease: "sine.inOut",
-          },
-          0.59,
-        )
-        .to(
-          scene,
-          {
-            cameraAzimuth: Math.PI * 2 + 1.35,
-            cameraElevation: 0.075,
-            cameraRadius: 3.95,
-            targetX: 0.02,
-            targetY: 0,
-            keyX: 0.5,
-            keyY: 2.4,
-            keyZ: 4.2,
-            keyIntensity: 2.35,
-            rimIntensity: 1.6,
-            duration: 0.06,
-            ease: "sine.inOut",
-          },
-          0.65,
-        )
-        .to(
-          scene,
-          {
-            cameraAzimuth: Math.PI * 2 + 2.78,
-            cameraElevation: 0.14,
-            cameraRadius: 4.25,
-            targetX: -0.015,
-            keyX: 3,
-            keyY: 3.2,
-            keyZ: -4.5,
-            keyIntensity: 2.25,
-            fillIntensity: 0.82,
-            duration: 0.07,
-            ease: "sine.inOut",
-          },
-          0.71,
-        )
-        .to(
-          scene,
-          {
-            iphoneX: -0.85,
-            iphoneScale: 0,
-            samsungX: 0.72,
-            samsungScale: 0.52,
-            samsungYaw: -0.18,
-            cameraAzimuth: Math.PI * 3,
-            cameraElevation: 0.1,
-            cameraRadius: 4.55,
-            targetX: 0,
-            targetY: 0,
-            fov: 33,
-            keyX: -3.8,
-            keyY: 3.4,
-            keyZ: 4.1,
-            keyIntensity: 2.45,
-            fillIntensity: 0.95,
-            rimIntensity: 1.3,
-            duration: 0.04,
-            ease: "power2.inOut",
-          },
-          0.78,
-        )
-        .to(
-          scene,
-          {
-            cameraAzimuth: Math.PI * 4,
-            cameraElevation: 0.025,
-            cameraRadius: 3.8,
-            targetY: 0.035,
-            fov: 30,
-            keyX: -4.2,
-            keyY: 1.5,
-            keyZ: 4,
-            keyIntensity: 2.05,
-            duration: 0.06,
-            ease: "sine.inOut",
-          },
-          0.82,
-        )
-        .to(
-          scene,
-          {
-            cameraAzimuth: Math.PI * 4 + Math.PI / 2,
-            cameraElevation: 0.08,
-            cameraRadius: 3.95,
-            targetY: 0,
-            keyX: 0.2,
-            keyY: 2.5,
-            keyZ: 4.5,
-            keyIntensity: 2.35,
-            rimIntensity: 1.55,
-            duration: 0.04,
-            ease: "sine.inOut",
-          },
-          0.88,
-        )
-        .to(
-          scene,
-          {
-            cameraAzimuth: Math.PI * 5,
-            cameraElevation: 0.14,
-            cameraRadius: 4.15,
-            keyX: 3.3,
-            keyY: 3.2,
-            keyZ: -4.3,
-            keyIntensity: 2.25,
-            duration: 0.04,
-            ease: "sine.inOut",
-          },
-          0.92,
-        )
-        .to(
-          scene,
-          {
-            cameraAzimuth: Math.PI * 5 - 0.32,
-            cameraElevation: 0.09,
-            cameraRadius: 4.35,
-            targetX: 0,
-            targetY: 0,
-            fov: 32,
-            keyX: -3.5,
-            keyY: 4,
-            keyZ: 5,
-            keyIntensity: 2.5,
-            fillIntensity: 1.1,
-            rimIntensity: 1.25,
-            duration: 0.04,
-            ease: "sine.inOut",
-          },
-          0.96,
         );
 
-      sceneLabels.forEach((label, index) => {
-        const start = [0.005, 0.085, 0.165, 0.405, 0.55, 0.78][index];
-        const end = [0.08, 0.16, 0.405, 0.55, 0.78, 0.995][index];
-        timeline
-          .fromTo(
-            label,
-            { autoAlpha: 0, y: 8 },
-            {
-              autoAlpha: 1,
-              y: 0,
-              duration: 0.025,
-              ease: "power2.out",
-              immediateRender: false,
-            },
-            start,
-          )
-          .to(
-            label,
-            {
-              autoAlpha: 0,
-              y: -6,
-              duration: 0.025,
-              ease: "power2.in",
-            },
-            end,
-          );
-      });
+      const handlePointerMove = (event: PointerEvent) => {
+        if (event.pointerType === "touch") return;
+        const bounds = section.getBoundingClientRect();
+        const x = (event.clientX - bounds.left) / bounds.width;
+        const y = (event.clientY - bounds.top) / bounds.height;
+        gsap.to(scene, {
+          parallaxX: (x - 0.5) * 2,
+          parallaxY: (0.5 - y) * 2,
+          duration: 0.65,
+          ease: "power2.out",
+          overwrite: "auto",
+          onUpdate: () => invalidateRef.current?.(),
+        });
+      };
+      const handlePointerLeave = () => {
+        gsap.to(scene, {
+          parallaxX: 0,
+          parallaxY: 0,
+          duration: 0.8,
+          ease: "power2.out",
+          overwrite: "auto",
+          onUpdate: () => invalidateRef.current?.(),
+        });
+      };
 
-      ScrollTrigger.refresh();
+      section.addEventListener("pointermove", handlePointerMove);
+      section.addEventListener("pointerleave", handlePointerLeave);
+
       return () => {
+        section.removeEventListener("pointermove", handlePointerMove);
+        section.removeEventListener("pointerleave", handlePointerLeave);
+        gsap.killTweensOf(scene);
+        entranceTween.kill();
         timeline.scrollTrigger?.kill();
         timeline.kill();
       };
-    });
-
-    media.add("(prefers-reduced-motion: reduce)", () => {
-      Object.assign(sceneStateRef.current, INITIAL_SCENE_STATE);
-      gsap.set(logo, { autoAlpha: 0, scale: 1, x: 0, y: 0 });
     });
 
     return () => media.revert();
@@ -788,30 +347,54 @@ export default function HeroSection() {
   return (
     <section
       ref={sectionRef}
-      aria-label="MR Mobile Wala smartphone showcase"
-      className="relative h-svh overflow-hidden bg-white text-[#191a18]"
+      aria-labelledby="hero-title"
+      className={`relative bg-[#FAFAF8] text-[#191a18] ${
+        prefersReducedMotion ? "h-svh" : "h-[112svh] md:h-[125svh]"
+      }`}
     >
-      <div className="relative h-full overflow-hidden bg-white">
+      <div
+        className={`${
+          prefersReducedMotion ? "relative" : "sticky top-0"
+        } h-svh overflow-hidden bg-[#FAFAF8]`}
+      >
         <Canvas
-          dpr={[1, 1.5]}
+          dpr={isMobile ? 1 : [1, 1.35]}
+          frameloop="demand"
           camera={{
             position: [0, 0, INITIAL_SCENE_STATE.cameraRadius],
-            fov: INITIAL_SCENE_STATE.fov,
+            fov: 32,
           }}
           gl={{
             alpha: false,
-            antialias: true,
+            antialias: !isMobile,
             powerPreference: "high-performance",
+            shadows: false,
           }}
-          className="!absolute inset-0"
+          className="!absolute inset-0 md:!left-[34%] md:!right-0 md:!w-[66%]"
           aria-hidden="true"
         >
-          <color attach="background" args={["#FFFFFF"]} />
-          <StudioLighting stateRef={sceneStateRef} />
-          <Environment resolution={128}>
+          <color attach="background" args={["#FAFAF8"]} />
+          <ambientLight intensity={0.65} />
+          <hemisphereLight args={["#ffffff", "#dedbd4", 0.72]} />
+          <directionalLight
+            color="#fffaf0"
+            intensity={2.25}
+            position={[-3.5, 4, 5]}
+          />
+          <directionalLight
+            color="#fff3df"
+            intensity={0.95}
+            position={[3, 0.5, 4]}
+          />
+          <directionalLight
+            color="#dbe4ed"
+            intensity={1.1}
+            position={[4, 1.5, -3]}
+          />
+          <Environment resolution={isMobile ? 64 : 128}>
             <Lightformer
               form="rect"
-              intensity={1.45}
+              intensity={1.3}
               color="#fffdf8"
               position={[-3, 2, 2]}
               rotation={[0, 0.3, 0]}
@@ -819,76 +402,68 @@ export default function HeroSection() {
             />
             <Lightformer
               form="rect"
-              intensity={0.9}
-              color="#c9d5df"
+              intensity={0.7}
+              color="#d9e0e5"
               position={[3, -0.5, -2]}
               rotation={[0, -0.5, 0]}
               scale={[3, 4.5, 1]}
             />
           </Environment>
           <Suspense fallback={null}>
-            <PhoneModels
+            <FoldablePhone
               stateRef={sceneStateRef}
-              loadIphone={loadIphone}
-              loadSamsung={loadSamsung}
+              invalidateRef={invalidateRef}
             />
+            <IphoneModel stateRef={sceneStateRef} />
           </Suspense>
         </Canvas>
 
-        <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
-          <div
-            ref={logoRef}
-            className="invisible flex scale-[0.94] items-center justify-center opacity-0"
-          >
-            <BrandLogo
-              variant="footer"
-              href={null}
-              priority
-              width={520}
-              alt="Mr. Mobile Wala"
-              imageClassName="!w-[min(72vw,520px)] !max-w-[520px]"
-            />
-          </div>
+        <div className="pointer-events-none absolute inset-x-5 top-20 z-10 flex justify-between gap-4 sm:inset-x-8 sm:top-24 md:inset-x-12 md:top-28">
+          <p className="text-[9px] font-medium uppercase tracking-[0.24em] text-black/70 sm:text-[10px]">
+            MR Mobile Wala
+          </p>
+          <p className="text-right text-[9px] font-medium uppercase tracking-[0.16em] text-black/70 sm:text-[10px] sm:tracking-[0.24em]">
+            Made personal. Built to move.
+          </p>
         </div>
 
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute left-6 top-24 z-10 md:left-12 md:top-28"
-        >
-          {SCENE_LABELS.map((label, index) => (
-            <p
-              key={label}
-              ref={(element) => {
-                sceneLabelsRef.current[index] = element;
-              }}
-              className="invisible absolute left-0 top-0 whitespace-nowrap text-[9px] font-medium uppercase tracking-[0.24em] text-black/50 opacity-0 sm:text-[10px]"
-            >
-              {label}
-            </p>
-          ))}
-        </div>
-
-        <div className="pointer-events-none absolute bottom-[max(28px,env(safe-area-inset-bottom))] left-6 right-6 flex items-end justify-between md:bottom-10 md:left-12 md:right-12">
-          <div>
-            <p className="text-[9px] font-medium uppercase tracking-[0.28em] text-black/40 sm:text-[10px]">
+        <div className="pointer-events-none absolute inset-x-5 top-[18%] z-10 flex flex-col gap-4 sm:inset-x-8 sm:top-[20%] md:inset-x-12 md:top-auto md:bottom-[18%] md:flex-row md:items-end md:justify-between md:gap-4">
+          <div className="pointer-events-auto max-w-[min(100%,34rem)] md:max-w-[40%]">
+            <p className="text-[9px] font-medium uppercase tracking-[0.2em] text-black/70 sm:text-[10px] sm:tracking-[0.28em]">
               Buy · Sell · Repair
             </p>
-            <p className="mt-2 text-xs tracking-[0.08em] text-black/65">
-              Made personal. Built to move.
-            </p>
+            <h1
+              id="hero-title"
+              className="mt-2 max-w-[12ch] text-[clamp(2.25rem,8vw,3.5rem)] font-semibold leading-[0.94] tracking-[-0.06em] md:max-w-[11ch] md:text-[clamp(3rem,5.1vw,5rem)]"
+            >
+              Your next move, made personal.
+            </h1>
+            <div className="mt-4 flex flex-wrap items-center gap-3 sm:mt-5 md:mt-6">
+              <Link
+                href="#services"
+                className="inline-flex min-h-11 items-center justify-center gap-3 rounded-full bg-[#263D38] px-5 text-xs font-medium text-white transition-colors hover:bg-[#1E302C] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#263D38] sm:px-6 sm:text-sm"
+              >
+                Explore services
+                <span aria-hidden="true">&rarr;</span>
+              </Link>
+              <Link
+                href="mailto:contact@mrmobilewala.com"
+                className="inline-flex min-h-11 items-center text-xs font-medium text-[#191a18] underline decoration-black/35 underline-offset-4 transition-colors hover:decoration-black focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#263D38] sm:text-sm"
+              >
+                Talk to us
+              </Link>
+            </div>
           </div>
-          <div className="flex items-center gap-3 text-[9px] uppercase tracking-[0.24em] text-black/45">
+          <div className="mb-1 hidden shrink-0 items-center gap-2 text-[8px] uppercase tracking-[0.14em] text-black/70 sm:flex sm:gap-4 sm:text-[10px] sm:tracking-[0.24em] md:mb-0">
             <span className="hidden sm:inline">Explore every angle</span>
-            <span aria-hidden="true" className="h-8 w-px origin-top bg-black/30" />
-            <span aria-hidden="true">Scroll</span>
+            <span aria-hidden="true" className="h-8 w-px bg-black/25" />
+            <span>Scroll</span>
           </div>
         </div>
-        <h1 className="sr-only">
-          MR Mobile Wala — Buy, sell, and repair smartphones
-        </h1>
       </div>
     </section>
   );
 }
 
 useGLTF.preload(FOLDABLE_MODEL_PATH);
+useGLTF.preload(IPHONE_MODEL_PATH);

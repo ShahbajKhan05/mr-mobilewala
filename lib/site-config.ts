@@ -21,3 +21,4 @@ export const SITE_DESCRIPTION =
   "Buy, sell, and repair smartphones with MR Mobile Wala.";
 export const BRAND_LOGO_PATH = "/mr-mobile-wala-logo.png";
 export const INSTAGRAM_URL = "https://instagram.com/mrmobilewala.2.0";
+export const WHATSAPP_PHONE = "918349813831";

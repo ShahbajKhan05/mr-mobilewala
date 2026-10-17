@@ -1,14 +1,21 @@
 
 @import "tailwindcss";
 
+:root {
+  color-scheme: light;
+  --site-background: #fafaf8;
+}
+
 html {
   min-height: 100%;
-  background: #f5f4f0;
+  background: var(--site-background);
+  scroll-behavior: smooth;
 }
 
 body {
   min-height: 100%;
   margin: 0;
+  background: var(--site-background);
   font-family: var(--font-geist-sans), Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -23,84 +30,17 @@ a {
 }
 
 :where(a, button, input, select, textarea, [tabindex]):focus-visible {
-  outline: 2px solid #00796b;
+  outline: 2px solid #45453f;
   outline-offset: 3px;
 }
 
 ::selection {
   color: #191a18;
-  background: #d5f36a;
+  background: #e7e6df;
 }
 
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
-  }
-}
-
-.brand-marquee-viewport {
-  -webkit-mask-image: linear-gradient(
-    to right,
-    transparent,
-    #000 8%,
-    #000 92%,
-    transparent
-  );
-  mask-image: linear-gradient(
-    to right,
-    transparent,
-    #000 8%,
-    #000 92%,
-    transparent
-  );
-}
-
-.brand-marquee-sequence {
-  padding-inline-end: 2.5rem;
-}
-
-.brand-marquee-track {
-  animation: brand-marquee-scroll 36s linear infinite;
-  will-change: transform;
-}
-
-@keyframes brand-marquee-scroll {
-  to {
-    transform: translate3d(-50%, 0, 0);
-  }
-}
-
-@media (min-width: 640px) {
-  .brand-marquee-sequence {
-    padding-inline-end: 3.5rem;
-  }
-}
-
-@media (min-width: 768px) {
-  .brand-marquee-sequence {
-    padding-inline-end: 4.5rem;
-  }
-}
-
-@media (min-width: 1024px) {
-  .brand-marquee-sequence {
-    padding-inline-end: 5.5rem;
-  }
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .brand-marquee-viewport:hover .brand-marquee-track {
-    animation-play-state: paused;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .brand-marquee-viewport {
-    overflow-x: auto;
-  }
-
-  .brand-marquee-track {
-    animation: none;
-    will-change: auto;
   }
 }

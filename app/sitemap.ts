@@ -8,5 +8,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     {
       url: new URL("/", SITE_URL).toString(),
     },
+    {
+      url: new URL("/contact", SITE_URL).toString(),
+    },
   ];
 }

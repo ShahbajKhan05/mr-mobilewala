@@ -13,6 +13,7 @@ import { usePathname } from "next/navigation";
 import gsap from "gsap";
 
 import BrandLogo from "@/components/BrandLogo";
+import { WHATSAPP_PHONE } from "@/lib/site-config";
 
 
 
@@ -23,8 +24,7 @@ import BrandLogo from "@/components/BrandLogo";
 // ============================================================================
 
 const SOCIAL_CONFIG = {
-
-  whatsapp: "https://wa.me/918349813831",
+  whatsapp: `https://wa.me/${WHATSAPP_PHONE}`,
 
   instagram: "https://instagram.com/mrmobilewala.2.0",
 
@@ -269,7 +269,6 @@ export default function Navbar() {
     const cta = panel.querySelector(".menu-cta-anim");
 
 
-
     if (isOpen) {
 
       gsap.killTweensOf([panel, items, socials, cta]);
@@ -446,7 +445,7 @@ export default function Navbar() {
 
           ref={leftPillRef}
 
-          className={`flex items-center justify-between px-3 sm:px-5 md:px-6 lg:px-7 bg-[#EDEDED] border border-[#1E1E1E]/8 transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] relative overflow-hidden group/pill ${
+          className={`flex items-center justify-between px-3 sm:px-5 md:px-6 lg:px-7 bg-[#FAFAF8] border border-[#1E1E1E]/10 transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] relative overflow-hidden group/pill ${
 
             isScrolled
 
@@ -664,7 +663,7 @@ export default function Navbar() {
 
           inert={!isOpen}
 
-          className={`absolute top-[calc(100%+8px)] left-0 w-full bg-[#EDEDED] border border-[#1E1E1E]/8 rounded-[24px] shadow-[0_24px_48px_rgba(0,0,0,0.12)] overflow-y-auto overscroll-contain transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] custom-scrollbar ${
+          className={`absolute top-[calc(100%+8px)] left-0 w-full bg-[#FAFAF8] border border-[#1E1E1E]/10 rounded-[24px] shadow-[0_24px_48px_rgba(0,0,0,0.12)] overflow-y-auto overscroll-contain transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] custom-scrollbar ${
 
             isOpen
 
@@ -1030,13 +1029,13 @@ export default function Navbar() {
 
               >
 
-                <span className="transition-transform duration-200 group-hover/store:scale-[1.02]">
+                <span className="relative z-10 transition-transform duration-200 group-hover/store:scale-[1.02]">
 
                   Visit Store
 
                 </span>
 
-                <span className="ml-1.5 inline-block transition-transform duration-200 group-hover/store:translate-x-1">
+                <span className="relative z-10 ml-1.5 inline-block transition-transform duration-200 group-hover/store:translate-x-1">
 
                   &rarr;
 
@@ -1065,7 +1064,7 @@ export default function Navbar() {
 
         ref={rightPillRef}
 
-        className={`hidden lg:flex pointer-events-auto items-center bg-[#EDEDED] rounded-full pl-7 pr-2 shrink-0 border border-[#1E1E1E]/8 transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`hidden lg:flex pointer-events-auto items-center bg-[#FAFAF8] rounded-full pl-7 pr-2 shrink-0 border border-[#1E1E1E]/10 transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] ${
 
           isScrolled
 
@@ -1121,13 +1120,13 @@ export default function Navbar() {
 
           href="/store"
 
-          className="group/visit relative bg-[#3C3C3C] text-[#EDEDED] rounded-full px-7 flex items-center justify-center font-medium text-[15px] tracking-tight hover:bg-[#2A2A2A] hover:scale-[1.025] active:scale-[0.98] transition-all duration-300 whitespace-nowrap shadow-sm overflow-hidden h-[48px] lg:h-[54px]"
+          className="group/visit relative flex h-[48px] items-center justify-center overflow-hidden rounded-full bg-[#3C3C3C] px-7 text-[15px] font-medium tracking-tight text-white shadow-sm transition-all duration-300 hover:scale-[1.025] hover:bg-[#2A2A2A] active:scale-[0.98] lg:h-[54px]"
 
         >
 
           {/* Inner Light Sweep on Hover */}
 
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
 
             <div className="w-1/2 h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-22deg] -translate-x-[180%] transition-transform duration-700 ease-out group-hover/visit:translate-x-[260%]" />
 
@@ -1135,13 +1134,13 @@ export default function Navbar() {
 
 
 
-          <span className="transition-transform duration-200 group-hover/visit:translate-x-[-1px]">
+          <span className="relative z-10 transition-transform duration-200 group-hover/visit:translate-x-[-1px]">
 
             Visit Store
 
           </span>
 
-          <span className="ml-1.5 inline-block transition-transform duration-200 group-hover/visit:translate-x-1">
+          <span className="relative z-10 ml-1.5 inline-block transition-transform duration-200 group-hover/visit:translate-x-1">
 
             &rarr;
 
