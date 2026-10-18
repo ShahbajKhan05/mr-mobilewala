@@ -3,6 +3,8 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import BrandMarquee from "@/components/BrandMarquee";
+import AboutStory from "@/components/AboutStory"; 
+import TeamCarousel from "@/components/TeamCarousel"; 
 import Footer from "@/components/Footer";
 import { SITE_URL } from "@/lib/site-config";
 
@@ -49,7 +51,7 @@ export default function Home() {
         <section
           id="services"
           aria-labelledby="services-title"
-          className="bg-[#FAFAF8] px-5 py-16 sm:px-10 sm:py-24 lg:px-16 lg:py-28"
+          className="px-5 py-16 sm:px-10 sm:py-24 lg:px-16 lg:py-28"
         >
           <div className="mx-auto max-w-6xl">
             <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-black/65 sm:text-xs">
@@ -87,6 +89,7 @@ export default function Home() {
               ].map((service) => (
                 <article
                   key={service.number}
+                  data-story-card
                   className="flex min-h-[220px] flex-col border-b border-black/10 py-5 sm:min-h-[250px] sm:border-b-0 sm:border-r sm:pr-5 sm:last:border-r-0 lg:min-h-[230px] lg:pr-8"
                 >
                   <p className="text-[10px] uppercase tracking-[0.2em] text-black/65">
@@ -112,6 +115,8 @@ export default function Home() {
             </div>
           </div>
         </section>
+        <AboutStory />
+        
       </main>
       <Footer />
     </div>

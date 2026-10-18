@@ -32,20 +32,13 @@ const SOCIAL_CONFIG = {
 
 };
 
-
-
 const NAV_LINKS = [
-
   { href: "/phones", label: "Phones" },
-
   { href: "/accessories", label: "Accessories" },
-
   { href: "/services", label: "Services" },
-
   { href: "/about", label: "About" },
-
+  { href: "/team", label: "Team" },
   { href: "/contact", label: "Contact" },
-
 ];
 
 
@@ -71,10 +64,9 @@ export default function Navbar() {
   const leftPillRef = useRef<HTMLDivElement>(null);
 
   const rightPillRef = useRef<HTMLDivElement>(null);
-
   const menuButtonRef = useRef<HTMLButtonElement>(null);
-
   const menuPanelRef = useRef<HTMLElement>(null);
+  const menuTimelineRef = useRef<gsap.core.Timeline | null>(null);
 
 
 
@@ -257,95 +249,68 @@ export default function Navbar() {
   // -------------------------------------------------------------
 
   useEffect(() => {
-
     if (!menuPanelRef.current) return;
-
     const panel = menuPanelRef.current;
-
     const items = panel.querySelectorAll(".menu-item-anim");
-
     const socials = panel.querySelectorAll(".menu-social-anim");
-
     const cta = panel.querySelector(".menu-cta-anim");
+    const animatedElements = [panel, ...items, ...socials, cta].filter(
+      (element): element is Element => element !== null,
+    );
 
+    menuTimelineRef.current?.kill();
+    menuTimelineRef.current = null;
 
-    if (isOpen) {
-
-      gsap.killTweensOf([panel, items, socials, cta]);
-
-      const openTl = gsap.timeline({ defaults: { ease: "power3.out" } });
-
-
-
-      openTl.fromTo(
-
-        panel,
-
-        { opacity: 0, scaleY: 0.96, y: -10, transformOrigin: "top center" },
-
-        { opacity: 1, scaleY: 1, y: 0, duration: 0.4 },
-
-        0
-
-      );
-
-
-
-      if (items.length > 0) {
-
-        openTl.fromTo(
-
-          items,
-
-          { opacity: 0, y: 18 },
-
-          { opacity: 1, y: 0, stagger: 0.06, duration: 0.45 },
-
-          0.08
-
-        );
-
-      }
-
-
-
-      if (socials.length > 0) {
-
-        openTl.fromTo(
-
-          socials,
-
-          { opacity: 0, scale: 0.85 },
-
-          { opacity: 1, scale: 1, stagger: 0.04, duration: 0.35 },
-
-          0.22
-
-        );
-
-      }
-
-
-
-      if (cta) {
-
-        openTl.fromTo(
-
-          cta,
-
-          { opacity: 0, y: 12 },
-
-          { opacity: 1, y: 0, duration: 0.4 },
-
-          0.28
-
-        );
-
-      }
-
+    if (!isOpen || prefersReducedMotion) {
+      gsap.set(animatedElements, { clearProps: "all" });
+      return;
     }
 
-  }, [isOpen]);
+    const openTl = gsap.timeline({ defaults: { ease: "power3.out" } });
+    menuTimelineRef.current = openTl;
+
+    openTl.fromTo(
+      panel,
+      { opacity: 0, scaleY: 0.96, y: -10, transformOrigin: "top center" },
+      { opacity: 1, scaleY: 1, y: 0, duration: 0.4 },
+      0,
+    );
+
+    if (items.length > 0) {
+      openTl.fromTo(
+        items,
+        { opacity: 0, y: 18 },
+        { opacity: 1, y: 0, stagger: 0.06, duration: 0.45 },
+        0.08,
+      );
+    }
+
+    if (socials.length > 0) {
+      openTl.fromTo(
+        socials,
+        { opacity: 0, scale: 0.85 },
+        { opacity: 1, scale: 1, stagger: 0.04, duration: 0.35 },
+        0.22,
+      );
+    }
+
+    if (cta) {
+      openTl.fromTo(
+        cta,
+        { opacity: 0, y: 12 },
+        { opacity: 1, y: 0, duration: 0.4 },
+        0.28,
+      );
+    }
+
+    return () => {
+      openTl.kill();
+      if (menuTimelineRef.current === openTl) {
+        menuTimelineRef.current = null;
+      }
+      gsap.set(animatedElements, { clearProps: "all" });
+    };
+  }, [isOpen, prefersReducedMotion]);
 
 
 
@@ -357,12 +322,9 @@ export default function Navbar() {
 
   useEffect(() => {
 
-    const handleClickOutside = (e: MouseEvent) => {
-
+    const handlePointerOutside = (e: PointerEvent) => {
       if (leftPillWrapperRef.current && !leftPillWrapperRef.current.contains(e.target as Node)) {
-
         setIsOpen(false);
-
       }
 
     };
@@ -383,16 +345,11 @@ export default function Navbar() {
 
 
 
-    document.addEventListener("mousedown", handleClickOutside);
-
+    document.addEventListener("pointerdown", handlePointerOutside);
     document.addEventListener("keydown", handleEscape);
-
     return () => {
-
-      document.removeEventListener("mousedown", handleClickOutside);
-
+      document.removeEventListener("pointerdown", handlePointerOutside);
       document.removeEventListener("keydown", handleEscape);
-
     };
 
   }, [isOpen]);
@@ -717,7 +674,7 @@ export default function Navbar() {
 
               </div>
 
-              <div>
+              <div className="min-w-0">
 
                 <span className="font-medium text-[17px] md:text-[19px] xl:text-[21px] tracking-tight text-[#1E1E1E] inline-block transition-transform duration-300 group-hover/item:translate-x-[5px]">
 
@@ -777,7 +734,7 @@ export default function Navbar() {
 
               </div>
 
-              <div>
+              <div className="min-w-0">
 
                 <span className="font-medium text-[17px] md:text-[19px] xl:text-[21px] tracking-tight text-[#1E1E1E] inline-block transition-transform duration-300 group-hover/item:translate-x-[5px]">
 
@@ -837,7 +794,7 @@ export default function Navbar() {
 
               </div>
 
-              <div>
+              <div className="min-w-0">
 
                 <span className="font-medium text-[17px] md:text-[19px] xl:text-[21px] tracking-tight text-[#1E1E1E] inline-block transition-transform duration-300 group-hover/item:translate-x-[5px]">
 
@@ -878,7 +835,16 @@ export default function Navbar() {
             </Link>
 
 
-
+              
+            <Link
+  href="/team"
+  onClick={() => setIsOpen(false)}
+  className="menu-item-anim flex items-center py-3 border-b border-[#1E1E1E]/10 group/item"
+>
+  <span className="font-medium text-[17px] md:text-[19px] xl:text-[20px] tracking-tight text-[#1E1E1E] transition-transform duration-300 group-hover/item:translate-x-1.5">
+    Team
+  </span>
+</Link>
             <Link
 
               href="/contact"

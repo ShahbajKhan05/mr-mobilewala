@@ -1,4 +1,7 @@
+"use client";
+
 import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 
 const BRANDS = [
   { name: "Apple", src: "/brands/apple.svg", width: 48, height: 48 },
@@ -34,6 +37,22 @@ function BrandSequence({ duplicate = false }: { duplicate?: boolean }) {
 }
 
 export default function BrandMarquee() {
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const [isInView, setIsInView] = useState(false);
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsInView(entry.isIntersecting),
+      { threshold: 0.1 },
+    );
+    observer.observe(viewport);
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <section
       id="brands"
@@ -54,10 +73,12 @@ export default function BrandMarquee() {
         </div>
       </div>
       <div
+        ref={viewportRef}
         className="brand-showcase__viewport"
         role="region"
         aria-label="Brand logos"
         tabIndex={0}
+        data-in-view={isInView}
       >
         <div className="brand-showcase__track">
           <BrandSequence />
@@ -73,8 +94,8 @@ export default function BrandMarquee() {
         .brand-showcase__track {
           display: flex;
           width: max-content;
-          animation: brand-showcase-scroll 36s linear infinite;
-          will-change: transform;
+          animation: brand-showcase-scroll 36s linear infinite paused;
+          will-change: auto;
         }
 
         .brand-showcase__sequence {
@@ -147,6 +168,11 @@ export default function BrandMarquee() {
             max-width: 120px;
             height: 40px;
           }
+        }
+
+        .brand-showcase__viewport[data-in-view="true"] .brand-showcase__track {
+          animation-play-state: running;
+          will-change: transform;
         }
 
         @media (hover: hover) and (pointer: fine) {

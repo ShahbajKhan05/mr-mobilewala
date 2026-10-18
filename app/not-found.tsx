@@ -5,7 +5,7 @@ import BrandLogo from "@/components/BrandLogo";
 
 export default function ComingSoonPage() {
   return (
-    <main className="relative flex min-h-[100svh] flex-col items-center justify-center overflow-x-hidden bg-[#FAFAF8] px-4 py-8 text-center text-[#222222] sm:px-5 sm:py-10">
+    <main className="relative flex min-h-[100svh] flex-col items-center justify-between overflow-x-hidden bg-[#FAFAF8] px-4 py-8 text-center text-[#222222] sm:px-5 sm:py-10">
       {/* Top border */}
       <div
         aria-hidden="true"
@@ -16,13 +16,13 @@ export default function ComingSoonPage() {
       <Link
         href="/"
         aria-label="MR Mobile Wala homepage"
-        className="absolute top-7 sm:top-9"
+        className="mt-1 shrink-0 sm:mt-0"
       >
         <BrandLogo variant="navbar" priority />
       </Link>
 
       {/* Main Content */}
-      <section className="flex w-full max-w-xl flex-col items-center pt-12">
+      <section className="flex w-full max-w-xl flex-1 flex-col items-center justify-center py-10">
         {/* Icon */}
         <div className="mb-4 flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_2px_5px_rgba(0,0,0,0.08)]">
           <Image
@@ -73,17 +73,25 @@ export default function ComingSoonPage() {
         </div>
 
         {/* Home Button */}
-        <Link
-          href="/"
-          className="mt-5 inline-flex min-h-12 items-center justify-center gap-3 rounded-full bg-[#222222] px-7 py-3 text-sm font-medium text-white transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]"
-        >
-          Back to Home
-          <span aria-hidden="true">↗</span>
-        </Link>
+       
+<Link
+  href="/"
+  style={{
+    backgroundColor: "#000000",
+    color: "#ffffff",
+    border: "1px solid #000000",
+  }}
+  className="mt-5 inline-flex min-h-12 min-w-[220px] items-center justify-center gap-3 rounded-full px-7 py-3 text-sm font-semibold transition-colors duration-200 hover:!bg-white hover:!text-black active:scale-[0.98]"
+>
+  <span style={{ color: "inherit" }}>Back to Home</span>
+  <span aria-hidden="true" style={{ color: "inherit" }}>
+    ↗
+  </span>
+</Link>
       </section>
 
       {/* Footer */}
-      <footer className="absolute inset-x-0 bottom-3 px-4 text-center sm:bottom-4">
+      <footer className="mt-auto w-full px-4 pt-6 text-center">
         <p className="text-xs text-black/55">
           Made with <span className="text-rose-400">♡</span> by Noor-Technologies
         </p>
