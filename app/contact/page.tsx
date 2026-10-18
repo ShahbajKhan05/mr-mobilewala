@@ -1,3 +1,4 @@
+
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import ContactRequestForm, {
@@ -42,7 +43,10 @@ function isContactService(value: string): value is ContactService {
 
 function ContactFormFallback() {
   return (
-    <main className="grid min-h-[60svh] place-items-center bg-[#FAFAF8] px-4 py-12 text-sm text-black/55" aria-busy="true">
+    <main
+      className="grid min-h-[60svh] place-items-center bg-[#FAFAF8] px-4 py-12 text-sm text-black/55"
+      aria-busy="true"
+    >
       <p role="status">Loading contact form…</p>
     </main>
   );

@@ -1,12 +1,19 @@
+
 "use client";
 
 import { useRef, useState, type FormEvent } from "react";
 import BrandLogo from "@/components/BrandLogo";
+
 const BUSINESS_PHONE = "919131383323";
 const BUSINESS_PHONE_DISPLAY = "+91 91313 83323";
 const BUSINESS_EMAIL = "mrmobilewala610@gmail.com";
 
-export type ContactService = "buy" | "sell" | "repair" | "accessories" | "other";
+export type ContactService =
+  | "buy"
+  | "sell"
+  | "repair"
+  | "accessories"
+  | "other";
 
 const services: { value: ContactService; label: string }[] = [
   { value: "buy", label: "Buy a phone" },
@@ -24,11 +31,17 @@ const messagePlaceholders: Record<ContactService, string> = {
   other: "Tell us a little about how we can help.",
 };
 
-type ContactField = "firstName" | "lastName" | "email" | "phone" | "message";
+type ContactField =
+  | "firstName"
+  | "lastName"
+  | "email"
+  | "phone"
+  | "message";
+
 type SubmissionState = "idle" | "opening" | "prepared" | "blocked";
 
 const inputClass =
-  "mt-2 min-h-12 w-full min-w-0 rounded-lg border border-black/15 bg-white px-3.5 py-3 text-base text-[#191a18] outline-none transition-colors placeholder:text-black/40 focus-visible:border-[#263D38] focus-visible:ring-2 focus-visible:ring-[#263D38]/20";
+  "mt-2 min-h-12 w-full min-w-0 rounded-lg border border-black/15 bg-white px-3.5 py-3 text-base text-[#191a18] outline-none transition-colors placeholder:text-black/40 focus-visible:border-[#e1306c] focus-visible:ring-2 focus-visible:ring-[#e1306c]/20";
 
 const serviceStrip = [
   {
@@ -55,12 +68,16 @@ export default function ContactRequestForm({
   initialService?: ContactService;
 }) {
   const [service, setService] = useState<ContactService>(initialService);
-  const [errors, setErrors] = useState<Partial<Record<ContactField, string>>>(
-    {},
-  );
+
+  const [errors, setErrors] = useState<
+    Partial<Record<ContactField, string>>
+  >({});
+
   const [submissionState, setSubmissionState] =
     useState<SubmissionState>("idle");
+
   const [whatsAppUrl, setWhatsAppUrl] = useState("");
+
   const firstNameRef = useRef<HTMLInputElement>(null);
   const lastNameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
@@ -70,59 +87,89 @@ export default function ContactRequestForm({
   function clearError(field: ContactField) {
     setErrors((current) => {
       if (!current[field]) return current;
+
       const next = { ...current };
       delete next[field];
+
       return next;
     });
   }
 
   function submitForm(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
     if (submissionState === "opening") return;
 
     const form = event.currentTarget;
     const values = new FormData(form);
+
     const firstName = String(values.get("firstName") ?? "").trim();
     const lastName = String(values.get("lastName") ?? "").trim();
     const email = String(values.get("email") ?? "").trim();
     const phone = String(values.get("phone") ?? "").trim();
     const message = String(values.get("message") ?? "").trim();
+
     const nextErrors: Partial<Record<ContactField, string>> = {};
 
-    if (!firstName) nextErrors.firstName = "Enter your first name.";
-    if (!lastName) nextErrors.lastName = "Enter your last name.";
+    if (!firstName) {
+      nextErrors.firstName = "Enter your first name.";
+    }
+
+    if (!lastName) {
+      nextErrors.lastName = "Enter your last name.";
+    }
+
     if (email && !emailRef.current?.checkValidity()) {
-      nextErrors.email = "Enter a valid email address, or leave this blank.";
+      nextErrors.email =
+        "Enter a valid email address, or leave this blank.";
     }
 
     const digitCount = (phone.match(/[0-9]/g) ?? []).length;
-    if (!/^[0-9+()\s-]{7,20}$/.test(phone) || digitCount < 7 || digitCount > 15) {
-      nextErrors.phone = "Enter a valid phone number, including its area code.";
+
+    if (
+      !/^[0-9+()\s-]{7,20}$/.test(phone) ||
+      digitCount < 7 ||
+      digitCount > 15
+    ) {
+      nextErrors.phone =
+        "Enter a valid phone number, including its area code.";
     }
+
     if (message.length < 8) {
-      nextErrors.message = "Add a few details so we can point you in the right direction.";
+      nextErrors.message =
+        "Add a few details so we can point you in the right direction.";
     }
 
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
       setSubmissionState("idle");
+
       const firstInvalidField = (
         ["firstName", "lastName", "email", "phone", "message"] as const
       ).find((field) => nextErrors[field]);
-      const fieldRefs: Record<ContactField, { current: HTMLElement | null }> = {
+
+      const fieldRefs: Record<
+        ContactField,
+        { current: HTMLElement | null }
+      > = {
         firstName: firstNameRef,
         lastName: lastNameRef,
         email: emailRef,
         phone: phoneRef,
         message: messageRef,
       };
-      if (firstInvalidField) fieldRefs[firstInvalidField].current?.focus();
+
+      if (firstInvalidField) {
+        fieldRefs[firstInvalidField].current?.focus();
+      }
+
       return;
     }
 
     const serviceLabel = services.find(
       (option) => option.value === service,
     )?.label;
+
     const whatsAppMessage = [
       "Hello MR Mobile Wala, I'd like some help with an enquiry.",
       "",
@@ -132,13 +179,17 @@ export default function ContactRequestForm({
       ...(email ? [`Email: ${email}`] : []),
       `Details: ${message}`,
     ].join("\n");
-    const destination = `https://wa.me/${BUSINESS_PHONE}?text=${encodeURIComponent(whatsAppMessage)}`;
+
+    const destination = `https://wa.me/${BUSINESS_PHONE}?text=${encodeURIComponent(
+      whatsAppMessage,
+    )}`;
 
     setErrors({});
     setWhatsAppUrl(destination);
     setSubmissionState("opening");
 
     const whatsAppWindow = window.open(destination, "_blank");
+
     if (whatsAppWindow) {
       whatsAppWindow.opener = null;
       setSubmissionState("prepared");
@@ -149,28 +200,34 @@ export default function ContactRequestForm({
 
   return (
     <main className="min-h-screen overflow-x-clip bg-[#FAFAF8] px-5 pb-14 pt-24 text-[#191a18] sm:px-8 sm:pb-12 sm:pt-28 lg:px-10">
+      {/* Page heading */}
       <header className="mx-auto max-w-2xl text-center">
-        <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-[#263D38] sm:text-[11px]">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#e1306c] sm:text-[18px]">
           Buy · Sell · Repair
         </p>
+
         <h1 className="mt-4 text-[clamp(2.5rem,7vw,4.25rem)] font-medium leading-[0.98] tracking-[-0.065em]">
-          Let&apos;s find the right phone for you.
+          Your Phone. Your Needs. Our Expertise.
         </h1>
+
         <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-black/60 sm:text-base sm:leading-7">
-          Talk to MR Mobile Wala about buying, selling, repairs, accessories,
-          or anything else you need a hand with.
+          From buying a new phone to getting it repaired, we make it easy for
+          you.
         </p>
       </header>
 
+      {/* Main contact card */}
       <section
         aria-label="Contact MR Mobile Wala"
         className="mx-auto mt-6 grid w-full max-w-5xl overflow-hidden rounded-2xl border border-black/10 bg-white shadow-[0_16px_48px_rgba(25,26,24,0.06)] sm:mt-10 sm:rounded-3xl lg:grid-cols-[1.1fr_0.9fr]"
       >
+        {/* Enquiry form */}
         <div className="min-w-0 p-5 sm:p-8 lg:p-10">
           <div className="mb-6">
             <h2 className="text-xl font-medium tracking-[-0.035em] sm:text-2xl">
               Send us an enquiry
             </h2>
+
             <p className="mt-1.5 text-sm leading-6 text-black/55">
               Share a few details and we&apos;ll take it from there.
             </p>
@@ -195,6 +252,7 @@ export default function ContactRequestForm({
                   }
                   onChange={() => clearError("firstName")}
                 />
+
                 {errors.firstName && (
                   <span
                     id="first-name-error"
@@ -223,6 +281,7 @@ export default function ContactRequestForm({
                   }
                   onChange={() => clearError("lastName")}
                 />
+
                 {errors.lastName && (
                   <span
                     id="last-name-error"
@@ -236,7 +295,9 @@ export default function ContactRequestForm({
             </div>
 
             <label className="block text-xs font-medium text-black/75">
-              Email address <span className="font-normal text-black/45">(optional)</span>
+              Email address{" "}
+              <span className="font-normal text-black/45">(optional)</span>
+
               <input
                 ref={emailRef}
                 className={inputClass}
@@ -250,6 +311,7 @@ export default function ContactRequestForm({
                 aria-describedby={errors.email ? "email-error" : undefined}
                 onChange={() => clearError("email")}
               />
+
               {errors.email && (
                 <span
                   id="email-error"
@@ -263,6 +325,7 @@ export default function ContactRequestForm({
 
             <label className="block text-xs font-medium text-black/75">
               Phone / WhatsApp number
+
               <input
                 ref={phoneRef}
                 className={inputClass}
@@ -277,6 +340,7 @@ export default function ContactRequestForm({
                 aria-describedby={errors.phone ? "phone-error" : undefined}
                 onChange={() => clearError("phone")}
               />
+
               {errors.phone && (
                 <span
                   id="phone-error"
@@ -290,6 +354,7 @@ export default function ContactRequestForm({
 
             <label className="block text-xs font-medium text-black/75">
               What can we help with?
+
               <select
                 className={`${inputClass} appearance-none`}
                 name="service"
@@ -309,6 +374,7 @@ export default function ContactRequestForm({
 
             <label className="block text-xs font-medium text-black/75">
               Message / phone details
+
               <textarea
                 ref={messageRef}
                 className={`${inputClass} min-h-28 resize-y`}
@@ -323,6 +389,7 @@ export default function ContactRequestForm({
                 }
                 onChange={() => clearError("message")}
               />
+
               {errors.message && (
                 <span
                   id="message-error"
@@ -334,12 +401,16 @@ export default function ContactRequestForm({
               )}
             </label>
 
+            {/* Gradient submit button */}
             <button
               type="submit"
               disabled={submissionState === "opening"}
-              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#191a18] px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-[#263D38] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#263D38] disabled:cursor-wait disabled:opacity-75 sm:min-h-14"
+              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#ff792d] via-[#e1306c] to-[#833ab4] px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#833ab4] disabled:cursor-wait disabled:opacity-75 sm:min-h-14"
             >
-              {submissionState === "opening" ? "Opening WhatsApp…" : "Send enquiry"}
+              {submissionState === "opening"
+                ? "Opening WhatsApp…"
+                : "Send enquiry"}
+
               {submissionState !== "opening" && (
                 <svg
                   aria-hidden="true"
@@ -366,28 +437,45 @@ export default function ContactRequestForm({
             </p>
 
             {submissionState === "prepared" && (
-              <p role="status" aria-live="polite" className="text-sm leading-6 text-[#263D38]">
+              <p
+                role="status"
+                aria-live="polite"
+                className="text-sm leading-6 text-[#e1306c]"
+              >
                 WhatsApp opened in a new tab. Your enquiry is not sent yet;
                 review it and press Send in WhatsApp.
               </p>
             )}
+
             {submissionState === "blocked" && (
-              <div role="status" aria-live="polite" className="text-sm leading-6 text-[#263D38]">
-                <p>Your browser blocked the new tab. Continue to WhatsApp to review and send your enquiry.</p>
+              <div
+                role="status"
+                aria-live="polite"
+                className="text-sm leading-6 text-[#e1306c]"
+              >
+                <p>
+                  Your browser blocked the new tab. Continue to WhatsApp to
+                  review and send your enquiry.
+                </p>
+
                 <a
                   href={whatsAppUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-1 inline-flex min-h-11 items-center font-medium underline underline-offset-4 focus-visible:rounded-sm"
                 >
-                  Open WhatsApp <span aria-hidden="true" className="ml-1">↗</span>
+                  Open WhatsApp{" "}
+                  <span aria-hidden="true" className="ml-1">
+                    ↗
+                  </span>
                 </a>
               </div>
             )}
           </form>
         </div>
 
-        <aside className="flex min-w-0 flex-col justify-between border-t border-black/10 bg-[#263D38] p-5 text-white sm:p-8 lg:border-l lg:border-t-0 lg:p-10">
+        {/* Contact information panel */}
+        <aside className="flex min-w-0 flex-col justify-between border-t border-white/15 bg-gradient-to-br from-[#833ab4] via-[#e1306c] to-[#ff792d] p-5 text-white sm:p-8 lg:border-l lg:border-t-0 lg:p-10">
           <div>
             <BrandLogo
               variant="custom"
@@ -397,55 +485,72 @@ export default function ContactRequestForm({
               className="rounded-xl"
               imageClassName="!w-[156px] sm:!w-[176px]"
             />
-            <p className="mt-6 text-[10px] font-medium uppercase tracking-[0.22em] text-white/60">
+
+            <p className="mt-6 text-[10px] font-medium uppercase tracking-[0.22em] text-white/80">
               MR Mobile Wala
             </p>
-            <p className="mt-2 text-sm text-white/80">Contact person: Ainul Khan</p>
+
+            <p className="mt-2 text-sm text-white/90">
+              Contact person: Ainul Khan
+            </p>
+
             <h2 className="mt-3 max-w-[15ch] text-[clamp(2rem,5vw,3rem)] font-medium leading-[1.02] tracking-[-0.055em]">
               Your next phone, without the guesswork.
             </h2>
-            <p className="mt-4 max-w-md text-sm leading-6 text-white/75">
+
+            <p className="mt-4 max-w-md text-sm leading-6 text-white/90">
               Straightforward guidance for buying, selling, repairing, or
               finding accessories for the phone you use.
             </p>
           </div>
 
           <div className="mt-10">
-            <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.2em] text-white/55">
+            <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.2em] text-white/80">
               Get in touch directly
             </p>
-            <div className="divide-y divide-white/15 border-y border-white/15">
+
+            <div className="divide-y divide-white/25 border-y border-white/25">
               <a
                 href={`tel:+${BUSINESS_PHONE}`}
-                className="flex min-h-14 items-center justify-between gap-4 py-3 text-sm transition-colors hover:text-white/75 focus-visible:rounded-sm"
+                className="flex min-h-14 items-center justify-between gap-4 py-3 text-sm transition-opacity hover:opacity-80 focus-visible:rounded-sm"
               >
                 <span>Call</span>
-                <span className="text-right text-white/70">{BUSINESS_PHONE_DISPLAY} ↗</span>
+                <span className="text-right text-white/90">
+                  {BUSINESS_PHONE_DISPLAY} ↗
+                </span>
               </a>
+
               <a
                 href={`https://wa.me/${BUSINESS_PHONE}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex min-h-14 items-center justify-between gap-4 py-3 text-sm transition-colors hover:text-white/75 focus-visible:rounded-sm"
+                className="flex min-h-14 items-center justify-between gap-4 py-3 text-sm transition-opacity hover:opacity-80 focus-visible:rounded-sm"
               >
                 <span>WhatsApp</span>
-                <span className="text-right text-white/70">{BUSINESS_PHONE_DISPLAY} ↗</span>
+                <span className="text-right text-white/90">
+                  {BUSINESS_PHONE_DISPLAY} ↗
+                </span>
               </a>
+
               <a
                 href={`mailto:${BUSINESS_EMAIL}`}
-                className="flex min-h-14 items-center justify-between gap-4 py-3 text-sm transition-colors hover:text-white/75 focus-visible:rounded-sm"
+                className="flex min-h-14 items-center justify-between gap-4 py-3 text-sm transition-opacity hover:opacity-80 focus-visible:rounded-sm"
               >
                 <span>Email</span>
-                <span className="break-all text-right text-white/70">{BUSINESS_EMAIL}</span>
+                <span className="break-all text-right text-white/90">
+                  {BUSINESS_EMAIL}
+                </span>
               </a>
             </div>
-            <p className="mt-3 text-xs leading-5 text-white/50">
+
+            <p className="mt-3 text-xs leading-5 text-white/75">
               Business hours: Please call or WhatsApp to confirm availability.
             </p>
           </div>
         </aside>
       </section>
 
+      {/* Service highlights */}
       <section
         aria-labelledby="contact-services-title"
         className="mx-auto mt-10 w-full max-w-5xl border-t border-black/10 pt-6 sm:mt-12 sm:pt-7"
@@ -456,13 +561,14 @@ export default function ContactRequestForm({
         >
           Here for your next step
         </h2>
+
         <ul className="mt-5 grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-4 sm:gap-4">
           {serviceStrip.map((item) => (
             <li
               key={item.label}
               className="flex min-w-0 items-center justify-center gap-2 text-center text-xs font-medium text-black/70 sm:text-sm"
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-black/10 text-[#263D38]">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#e1306c]/20 text-[#e1306c]">
                 <svg
                   aria-hidden="true"
                   width="18"
@@ -477,6 +583,7 @@ export default function ContactRequestForm({
                   <path d={item.path} />
                 </svg>
               </span>
+
               <span>{item.label}</span>
             </li>
           ))}

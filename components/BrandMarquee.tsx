@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from "next/image";
@@ -27,8 +28,9 @@ function BrandSequence({ duplicate = false }: { duplicate?: boolean }) {
             alt={duplicate ? "" : `${brand.name} logo`}
             width={brand.width}
             height={brand.height}
-            sizes="(max-width: 640px) 88px, 120px"
+            sizes="(max-width: 639px) 88px, (max-width: 1023px) 112px, 120px"
             className="brand-showcase__logo"
+            draggable={false}
           />
         </li>
       ))}
@@ -48,8 +50,8 @@ export default function BrandMarquee() {
       ([entry]) => setIsInView(entry.isIntersecting),
       { threshold: 0.1 },
     );
-    observer.observe(viewport);
 
+    observer.observe(viewport);
     return () => observer.disconnect();
   }, []);
 
@@ -57,26 +59,37 @@ export default function BrandMarquee() {
     <section
       id="brands"
       aria-labelledby="brands-title"
-      className="brand-showcase w-full overflow-hidden bg-[#FAFAF8] py-8 sm:py-10 lg:py-12"
+      className="brand-showcase w-full overflow-hidden border-y border-[#eee8ef] bg-white py-7 sm:py-9"
     >
-      <div className="mx-auto mb-5 flex max-w-7xl items-end justify-between gap-4 px-6 sm:mb-7 sm:px-10 lg:px-16">
+      <div className="mx-auto mb-5 flex max-w-7xl items-end justify-between gap-4 px-5 sm:mb-6 sm:px-8 lg:px-12">
         <div>
-          <p className="mb-2 hidden text-[9px] font-medium uppercase tracking-[0.24em] text-black/65 sm:block sm:text-[10px]">
-            The brands we work with
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#e1306c] sm:text-[11px]">
+            Trusted technology brands
           </p>
+
           <h2
             id="brands-title"
-            className="text-xs font-medium uppercase tracking-[0.16em] text-black/75 sm:text-sm sm:tracking-[0.2em]"
+            className="text-xl font-semibold tracking-[-0.04em] text-[#1d1d1f] sm:text-2xl"
           >
-            Built for every device
+            Find your next favourite.
           </h2>
+
+          <p className="mt-1 text-xs leading-5 text-[#6e6e73] sm:text-sm">
+            Explore brands for every style and budget.
+          </p>
         </div>
+
+        <span
+          aria-hidden="true"
+          className="hidden h-1 w-16 shrink-0 rounded-full bg-gradient-to-r from-[#ff792d] via-[#e1306c] to-[#833ab4] sm:block"
+        />
       </div>
+
       <div
         ref={viewportRef}
         className="brand-showcase__viewport"
         role="region"
-        aria-label="Brand logos"
+        aria-label="Mobile phone brand logos"
         tabIndex={0}
         data-in-view={isInView}
       >
@@ -85,17 +98,32 @@ export default function BrandMarquee() {
           <BrandSequence duplicate />
         </div>
       </div>
+
+      <div className="mx-auto mt-5 flex max-w-7xl items-center gap-2 px-5 sm:px-8 lg:px-12">
+        <span
+          aria-hidden="true"
+          className="h-1.5 w-1.5 rounded-full bg-[#e1306c]"
+        />
+        <p className="text-[11px] text-[#6e6e73] sm:text-xs">
+          Multiple brands. More ways to find your fit.
+        </p>
+      </div>
+
       <style>{`
         .brand-showcase__viewport {
-          overflow: hidden;
           width: 100%;
+          overflow: hidden;
+          outline-offset: -2px;
+        }
+
+        .brand-showcase__viewport:focus-visible {
+          outline: 2px solid #833ab4;
         }
 
         .brand-showcase__track {
           display: flex;
           width: max-content;
           animation: brand-showcase-scroll 36s linear infinite paused;
-          will-change: auto;
         }
 
         .brand-showcase__sequence {
@@ -103,10 +131,10 @@ export default function BrandMarquee() {
           display: flex;
           flex: 0 0 auto;
           align-items: center;
-          justify-content: space-between;
+          justify-content: space-around;
+          gap: 30px;
           width: max-content;
           min-width: 100vw;
-          gap: 30px;
           margin: 0;
           padding: 0 24px;
           list-style: none;
@@ -114,28 +142,52 @@ export default function BrandMarquee() {
 
         .brand-showcase__item {
           display: flex;
-          height: 44px;
           flex: 0 0 auto;
           align-items: center;
           justify-content: center;
+          min-width: 70px;
+          height: 46px;
         }
 
+        /* All SVG logos stay in their original colours */
         .brand-showcase__logo {
           display: block;
           width: auto;
           max-width: 88px;
           height: 30px;
           object-fit: contain;
+          opacity: 1;
+          filter: none;
+          transform: none;
+          transition: transform 220ms ease;
         }
 
         @keyframes brand-showcase-scroll {
           from {
             transform: translate3d(0, 0, 0);
           }
-
           to {
             transform: translate3d(-50%, 0, 0);
           }
+        }
+
+        /* Desktop hover: keep colours, add a subtle lift */
+        @media (hover: hover) and (pointer: fine) {
+          .brand-showcase__item:hover .brand-showcase__logo {
+            transform: translateY(-2px);
+          }
+
+          .brand-showcase__viewport:hover .brand-showcase__track {
+            animation-play-state: paused;
+          }
+        }
+
+        .brand-showcase__viewport[data-in-view="true"] .brand-showcase__track {
+          animation-play-state: running;
+        }
+
+        .brand-showcase__viewport:focus .brand-showcase__track {
+          animation-play-state: paused;
         }
 
         @media (min-width: 640px) {
@@ -145,6 +197,7 @@ export default function BrandMarquee() {
           }
 
           .brand-showcase__item {
+            min-width: 90px;
             height: 52px;
           }
 
@@ -161,28 +214,14 @@ export default function BrandMarquee() {
           }
 
           .brand-showcase__item {
-            height: 60px;
+            min-width: 100px;
+            height: 58px;
           }
 
           .brand-showcase__logo {
             max-width: 120px;
             height: 40px;
           }
-        }
-
-        .brand-showcase__viewport[data-in-view="true"] .brand-showcase__track {
-          animation-play-state: running;
-          will-change: transform;
-        }
-
-        @media (hover: hover) and (pointer: fine) {
-          .brand-showcase__viewport:hover .brand-showcase__track {
-            animation-play-state: paused;
-          }
-        }
-
-        .brand-showcase__viewport:focus .brand-showcase__track {
-          animation-play-state: paused;
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -197,7 +236,14 @@ export default function BrandMarquee() {
 
           .brand-showcase__track {
             animation: none;
-            will-change: auto;
+          }
+
+          .brand-showcase__sequence {
+            min-width: auto;
+          }
+
+          .brand-showcase__logo {
+            transition: none;
           }
         }
       `}</style>

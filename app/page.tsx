@@ -5,6 +5,7 @@ import HeroSection from "@/components/HeroSection";
 import BrandMarquee from "@/components/BrandMarquee";
 import AboutStory from "@/components/AboutStory"; 
 import TeamCarousel from "@/components/TeamCarousel"; 
+import ContactRequestForm from "@/components/ContactRequestForm";
 import Footer from "@/components/Footer";
 import { SITE_URL } from "@/lib/site-config";
 
@@ -116,6 +117,10 @@ export default function Home() {
           </div>
         </section>
         <AboutStory />
+        <TeamCarousel />
+        <ContactRequestForm />
+
+       
         
       </main>
       <Footer />

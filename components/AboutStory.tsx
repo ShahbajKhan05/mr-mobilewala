@@ -1,171 +1,237 @@
+
 import Image from "next/image";
 import Link from "next/link";
-import TeamCarousel from "@/components/TeamCarousel";
-const BRAND_FACTS = [
+
+const services = [
   {
-    label: "What we offer",
-    statement: "Phones, accessories and repair.",
+    title: "Latest Smartphones",
+    description: "Explore phones from popular brands.",
+    image: "/Logo.png",
+    alt: "Smartphones displayed inside a mobile shop",
   },
   {
-    label: "Our approach",
-    statement: "Clear options, shaped around you.",
+    title: "Accessories",
+    description: "Covers, chargers, earphones and more.",
+    image: "/Logo.png",
+    alt: "Mobile accessories displayed in a shop",
   },
   {
-    label: "Our commitment",
-    statement: "Help you make an informed choice.",
+    title: "Repair & Service",
+    description: "Ask about support for your phone.",
+    image: "/Logo.png",
+    alt: "Technician repairing a smartphone",
   },
 ];
 
-const VALUES = [
+const highlights = [
   {
-    number: "01",
-    title: "Personal guidance",
-    description:
-      "We begin with your needs, so the conversation stays about what matters to you.",
+    icon: "▣",
+    title: "What we offer",
+    description: "Phones, accessories and repair.",
+    color: "bg-white",
+    iconColor: "text-[#7c3aed]",
   },
   {
-    number: "02",
-    title: "Clear options",
-    description:
-      "Explore phones, services, and accessories with straightforward information.",
+    icon: "↗",
+    title: "Our approach",
+    description: "Clear options, shaped around you.",
+    color: "bg-white",
+    iconColor: "text-[#e1306c]",
   },
   {
-    number: "03",
-    title: "Informed decisions",
-    description:
-      "Take the time to consider your options and choose a next step with confidence.",
+    icon: "✓",
+    title: "Our commitment",
+    description: "Help you make an informed choice.",
+    color: "bg-white",
+    iconColor: "text-[#087443]",
   },
 ];
 
 export default function AboutStory() {
   return (
-    <main id="main-content" className="bg-[#FAFAF8] text-[#191a18]">
-      <section
-        aria-labelledby="about-title"
-        className="relative isolate flex h-[52svh] min-h-[340px] max-h-[600px] items-center justify-center overflow-hidden bg-[#191a18] sm:h-[60svh] sm:min-h-[420px]"
-      >
+    <main
+      id="main-content"
+      className="overflow-hidden bg-white font-sans text-[#1d1d1f] antialiased"
+    >
+      {/* Hero */}
+      <section className="relative isolate overflow-hidden bg-[#f5f5f7]">
         <Image
-          src="/about-phone-hero.jpg"
-          alt=""
+          src="/unnamed.webp"
+          alt="MR Mobile Wala mobile shop"
           fill
           priority
           sizes="100vw"
-          className="object-cover object-[52%_56%] sm:object-[50%_48%]"
+          className="object-cover object-center"
         />
+
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-black/55"
+          className="absolute inset-0 bg-gradient-to-r from-white via-white/95 to-white/10 sm:via-white/85 sm:to-transparent"
         />
-        <h1
-          id="about-title"
-          className="relative px-5 text-center text-[clamp(3.5rem,11vw,7.5rem)] font-medium leading-none tracking-[-0.075em] text-white"
-        >
-          About Us
-        </h1>
-      </section>
 
-      <section
-        aria-labelledby="about-story-title"
-        className="mx-auto grid max-w-7xl gap-8 px-5 py-10 sm:gap-10 sm:px-10 sm:py-14 md:grid-cols-[0.9fr_1.1fr] md:gap-10 lg:gap-16 lg:px-16 lg:py-16"
-      >
-        <div>
-          <p className="mb-6 text-[10px] font-medium uppercase tracking-[0.22em] text-[#263D38] sm:text-xs">
-            A little about us
-          </p>
-          <dl className="border-t border-black/15">
-            {BRAND_FACTS.map((fact) => (
-              <div
-                key={fact.label}
-                className="grid gap-2 border-b border-black/15 py-5 sm:grid-cols-[minmax(7rem,0.65fr)_1.35fr] sm:items-baseline sm:gap-5 sm:py-6"
-              >
-                <dt className="text-[10px] font-medium uppercase tracking-[0.18em] text-black/50 sm:text-[11px]">
-                  {fact.label}
-                </dt>
-                <dd className="text-xl font-medium leading-tight tracking-[-0.04em] sm:text-2xl lg:text-[1.75rem]">
-                  {fact.statement}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </div>
+        <div className="relative mx-auto flex min-h-[340px] max-w-7xl items-center px-5 py-9 sm:min-h-[390px] sm:px-8 lg:min-h-[410px]">
+          <div className="max-w-[510px]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6e6e73]">
+              About MR Mobile Wala
+            </p>
 
-        <div className="max-w-2xl md:pt-1">
-          <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-[#263D38] sm:text-xs">
-            MR Mobile Wala
-          </p>
-          <h2
-            id="about-story-title"
-            className="mt-4 max-w-[17ch] text-[clamp(2rem,5.5vw,3.5rem)] font-medium leading-[1.02] tracking-[-0.06em]"
-          >
-            Technology should feel personal.
-          </h2>
-          <div className="mt-6 space-y-4 text-sm leading-7 text-black/65 sm:mt-8 sm:text-base sm:leading-8">
-            <p>
-              We help people explore smartphones, sell or exchange a device,
-              find accessories, and ask about phone repairs.
-            </p>
-            <p>
-              Looking to buy? Tell us what you need and what matters to you.
-              Thinking of selling or exchanging? Share a little about your
-              current phone. For repairs and accessories, start with the device
-              and what you&apos;re looking for.
-            </p>
-            <p>
-              Every enquiry starts with a conversation, so you can consider the
-              options and choose a next step that feels right for you.
-            </p>
-          </div>
-          <Link
-            href="/contact"
-            className="mt-7 inline-flex min-h-11 items-center gap-3 text-sm font-medium underline decoration-black/30 underline-offset-4 transition-colors hover:text-[#263D38] hover:decoration-[#263D38] focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#263D38]"
-          >
-            Talk to our team <span aria-hidden="true">&rarr;</span>
-          </Link>
-        </div>
-      </section>
+            <h1 className="mt-4 text-[clamp(2.6rem,6vw,4.7rem)] font-semibold leading-[1.02] tracking-[-0.055em]">
+              Your local
+              <span className="block bg-gradient-to-r from-[#ff792d] via-[#e1306c] to-[#833ab4] bg-clip-text text-transparent">
+                mobile store.
+              </span>
+            </h1>
 
-      <section
-        aria-labelledby="our-story-title"
-        className="border-y border-black/10 bg-[#F3F2EE]"
-      >
-        <div className="mx-auto grid max-w-7xl items-center gap-8 px-5 py-10 sm:gap-10 sm:px-10 sm:py-14 md:grid-cols-[1fr_0.9fr] lg:gap-16 lg:px-16 lg:py-16"
-        >
-          <div className="relative aspect-[4/3] min-h-0 overflow-hidden bg-[#dedbd4] sm:aspect-[5/4]">
-            <Image
-              src="/about-phone-workspace.jpg"
-              alt="A smartphone beside a laptop in a workspace"
-              fill
-              sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 560px"
-              className="object-cover"
-            />
-          </div>
-          <div className="max-w-xl">
-            <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-[#263D38] sm:text-xs">
-              Our story
+            <p className="mt-4 text-sm font-medium text-[#424245] sm:text-base">
+              Phones <span className="mx-1.5 text-[#a1a1a6]">·</span>
+              Accessories <span className="mx-1.5 text-[#a1a1a6]">·</span>
+              Repair <span className="mx-1.5 text-[#a1a1a6]">·</span>
+              Exchange
             </p>
-            <h2
-              id="our-story-title"
-              className="mt-4 max-w-[16ch] text-[clamp(2.25rem,5.5vw,4rem)] font-medium leading-[0.98] tracking-[-0.065em]"
+
+            <p className="mt-3 max-w-sm text-sm leading-6 text-[#515154] sm:text-base sm:leading-7">
+              Technology ko simple banane ke liye, hum hamesha aapke saath hain.
+            </p>
+
+            <Link
+              href="/contact"
+              className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-gradient-to-r from-[#ff792d] via-[#e1306c] to-[#833ab4] px-5 text-sm font-semibold text-white shadow-sm transition hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#833ab4]"
             >
-              Making phone decisions simpler.
-            </h2>
-            <div className="mt-5 space-y-4 text-sm leading-7 text-black/65 sm:mt-7 sm:text-base sm:leading-8">
-              <p>
-                MR Mobile Wala helps people with the everyday choices around
-                their phones: finding a device, selling or exchanging one,
-                arranging a repair, or looking for accessories.
-              </p>
-              <p>
-                Each enquiry starts with the person and the device. Tell us
-                what you need, ask your questions, and explore a useful next
-                step without the guesswork.
-              </p>
+              Talk to our team <span aria-hidden="true">→</span>
+            </Link>
+
+            <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-xs font-medium text-[#424245]">
+              <span>✓ Trusted advice</span>
+              <span>✓ Genuine products</span>
+              <span>✓ Friendly support</span>
             </div>
           </div>
         </div>
       </section>
 
-      <TeamCarousel />
+      {/* Compact highlight cards */}
+      <section className="mx-auto grid max-w-7xl gap-3 px-4 py-4 sm:grid-cols-3 sm:px-7 sm:py-5">
+        {highlights.map((item) => (
+          <div
+            key={item.title}
+            className={`flex min-h-[88px] items-center gap-4 rounded-2xl border border-[#e8e8ed] p-4 sm:p-5 ${item.color}`}
+          >
+            <div
+              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#f7f7fa] text-2xl font-medium ${item.iconColor}`}
+              aria-hidden="true"
+            >
+              {item.icon}
+            </div>
+
+            <div>
+              <h2 className="text-base font-semibold tracking-tight sm:text-lg">
+                {item.title}
+              </h2>
+              <p className="mt-1 text-xs leading-5 text-[#6e6e73] sm:text-sm">
+                {item.description}
+              </p>
+            </div>
+          </div>
+        ))}
+      </section>
+
+      {/* About text and service photos */}
+      <section className="mx-auto grid max-w-7xl gap-6 px-5 py-5 sm:px-7 sm:py-7 lg:grid-cols-[0.9fr_1.7fr] lg:items-center">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#6e6e73]">
+            A little about us
+          </p>
+
+          <h2 className="mt-3 text-3xl font-semibold leading-[1.1] tracking-[-0.045em] sm:text-4xl">
+            Technology should feel{" "}
+            <span className="bg-gradient-to-r from-[#ff792d] via-[#e1306c] to-[#833ab4] bg-clip-text text-transparent">
+              personal.
+            </span>
+          </h2>
+
+          <p className="mt-4 text-sm leading-6 text-[#6e6e73] sm:text-base">
+            We help people explore smartphones, sell or exchange a device,
+            find accessories, and ask about phone repairs.
+          </p>
+
+          <Link
+            href="/contact"
+            className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-full border border-[#d2d2d7] px-5 text-sm font-medium transition hover:border-[#e1306c] hover:text-[#c02670] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#833ab4]"
+          >
+            Know more about us <span aria-hidden="true">→</span>
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {services.map((service) => (
+            <article key={service.title} className="min-w-0">
+              <div className="relative h-48 overflow-hidden rounded-xl bg-[#f5f5f7] sm:h-36 lg:h-44">
+                <Image
+                  src={service.image}
+                  alt={service.alt}
+                  fill
+                  sizes="(max-width: 639px) 90vw, (max-width: 1023px) 30vw, 300px"
+                  className="object-cover transition duration-300 hover:scale-[1.03]"
+                />
+              </div>
+
+              <h3 className="mt-2 text-sm font-semibold leading-5">
+                {service.title}
+              </h3>
+              <p className="mt-1 text-xs leading-5 text-[#6e6e73]">
+                {service.description}
+              </p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* Shop photo and story */}
+      <section className="mt-2 bg-[#fafafc]">
+        <div className="mx-auto grid max-w-7xl items-center gap-6 px-5 py-6 sm:px-7 sm:py-8 md:grid-cols-[1.15fr_1fr]">
+          <div className="relative h-[230px] overflow-hidden rounded-2xl bg-[#e8e8ed] sm:h-[300px]">
+            <Image
+              src="/unnamed.webp"
+              alt="MR Mobile Wala store front"
+              fill
+              sizes="(max-width: 767px) 100vw, 55vw"
+              className="object-cover"
+            />
+          </div>
+
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#6e6e73]">
+              Our story
+            </p>
+
+            <h2 className="mt-3 text-3xl font-semibold leading-[1.08] tracking-[-0.045em] sm:text-4xl">
+              Making phone decisions{" "}
+              <span className="bg-gradient-to-r from-[#ff792d] via-[#e1306c] to-[#833ab4] bg-clip-text text-transparent">
+                simpler.
+              </span>
+            </h2>
+
+            <p className="mt-4 text-sm leading-6 text-[#6e6e73] sm:text-base">
+              Har enquiry ek conversation se shuru hoti hai. Apni need
+              batayein, questions poochhein aur available options samajhkar
+              agla step choose karein.
+            </p>
+
+            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-xs font-medium text-[#424245]">
+              <span>♧ Personal guidance</span>
+              <span>◇ Clear options</span>
+              <span>✓ Informed decisions</span>
+            </div>
+
+            <Link
+              href="/contact"
+              className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#c02670] hover:text-[#833ab4] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#833ab4]"
+            >
+              Talk to our team <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }

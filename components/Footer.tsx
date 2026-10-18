@@ -57,10 +57,16 @@ const VISIT_LINKS: FooterLinkItem[] = [
 ];
 
 const LEGAL_LINKS: FooterLinkItem[] = [
-  { label: "Privacy Policy", href: "#", palette: "muted-violet" },
-  { label: "Terms & Conditions", href: "#", palette: "muted-violet" },
-  { label: "Shipping Policy", href: "#", palette: "muted-violet" },
-  { label: "Return Policy", href: "#", palette: "muted-violet" },
+  {
+    label: "Privacy Policy",
+    href: "/privacy",
+    palette: "muted-violet",
+  },
+  {
+    label: "Terms & Conditions",
+    href: "/terms",
+    palette: "muted-violet",
+  },
 ];
 
 interface FooterProps {
@@ -78,11 +84,11 @@ function FooterTextLink({
   return (
     <Link
       href={href}
-      className="group inline-flex min-h-7 max-w-full items-center text-sm text-[#1E1E1E]/75 transition-all duration-300 hover:translate-x-1 hover:text-[#00796B] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#00796B]"
+      className="group inline-flex min-h-7 max-w-full items-center text-sm text-[#1E1E1E]/75 transition-all duration-300 hover:translate-x-1 hover:text-[#e1306c] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#833ab4]"
     >
       <span className="relative">
         {label}
-        <span className="absolute -bottom-0.5 left-0 h-px w-0 bg-[#00796B] transition-all duration-300 group-hover:w-full" />
+        <span className="absolute -bottom-0.5 left-0 h-px w-0 bg-gradient-to-r from-[#ff792d] via-[#e1306c] to-[#833ab4] transition-all duration-300 group-hover:w-full" />
       </span>
 
       <span
@@ -116,7 +122,7 @@ export default function Footer({
         lenis?: {
           scrollTo: (
             target: number | string | HTMLElement,
-            options?: { duration?: number }
+            options?: { duration?: number },
           ) => void;
         };
       };
@@ -130,7 +136,7 @@ export default function Footer({
   };
 
   return (
-    <footer className="relative z-20 w-full overflow-hidden border-t border-[#1E1E1E]/10 bg-[#EDEDED] text-[#1E1E1E]">
+    <footer className="relative z-20 w-full overflow-hidden border-t border-[#1E1E1E]/10 bg-[#FAFAF8] text-[#1E1E1E]">
       <div className="mx-auto w-full max-w-screen-2xl px-4 pb-2 pt-8 sm:px-6 sm:pb-3 sm:pt-10 md:px-10 md:pt-12 lg:px-12 xl:px-16">
         {/* Return to top */}
         {showReturnToTop && (
@@ -142,10 +148,10 @@ export default function Footer({
             <button
               type="button"
               onClick={handleReturnToTop}
-              className="group inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#1E1E1E] px-5 py-3 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white shadow-lg transition-all hover:scale-[1.02] hover:bg-black active:scale-[0.98] sm:gap-3 sm:px-8 sm:text-[11px] sm:tracking-[0.18em]"
+              className="group inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#ff792d] via-[#e1306c] to-[#833ab4] px-5 py-3 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white shadow-lg transition-all hover:scale-[1.02] hover:opacity-90 active:scale-[0.98] sm:gap-3 sm:px-8 sm:text-[11px] sm:tracking-[0.18em]"
               aria-label="Return to top of journey"
             >
-              <span className="text-[#00E5FF] transition-transform group-hover:-translate-y-1">
+              <span className="text-white transition-transform group-hover:-translate-y-1">
                 ↑
               </span>
               <span>Return to Top</span>
@@ -177,7 +183,7 @@ export default function Footer({
                         : undefined
                     }
                     aria-label={social.ariaLabel}
-                    className="group inline-flex min-h-10 max-w-full items-center gap-2 text-sm text-[#1E1E1E]/75 transition-all duration-300 hover:translate-x-1 hover:text-[#00796B] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#00796B]"
+                    className="group inline-flex min-h-10 max-w-full items-center gap-2 text-sm text-[#1E1E1E]/75 transition-all duration-300 hover:translate-x-1 hover:text-[#e1306c] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#833ab4]"
                   >
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center transition-transform duration-300 group-hover:scale-110 sm:h-10 sm:w-10 md:h-11 md:w-11">
                       <Image
@@ -262,12 +268,10 @@ export default function Footer({
 
         {/* Brand conclusion */}
         <section className="mt-9 border-t border-[#1E1E1E]/10 pt-8 text-center sm:mt-10 sm:pt-10 md:mt-12">
-          <div className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#00796B] sm:text-[11px] sm:tracking-[0.28em]">
-            [ MR. MOBILE WALA ]
-          </div>
 
           <h2 className="mb-2 text-[1.65rem] font-black uppercase leading-tight tracking-tight text-[#1E1E1E] sm:text-[2.1rem] md:text-[2.8rem]">
-            BUY <span>•</span> SELL <span>•</span> REPAIR
+            BUY <span className="text-[#e1306c]">•</span> SELL{" "}
+            <span className="text-[#833ab4]">•</span> REPAIR
           </h2>
 
           <p className="mx-auto mb-5 max-w-[480px] px-1 text-[12px] font-medium leading-5 text-[#1E1E1E]/70 sm:mb-6 sm:text-[14px] sm:leading-6">
@@ -287,8 +291,8 @@ export default function Footer({
                 href={item.href}
                 className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-full border px-4 py-2.5 text-[11px] font-bold transition-all duration-300 hover:-translate-y-0.5 sm:px-5 sm:text-[12px] ${
                   item.dark
-                    ? "border-[#1E1E1E] bg-[#1E1E1E] text-white hover:bg-black"
-                    : "border-[#1E1E1E]/15 bg-white text-[#1E1E1E] hover:bg-[#F5F5F5]"
+                    ? "border-transparent bg-gradient-to-r from-[#ff792d] via-[#e1306c] to-[#833ab4] text-white hover:opacity-90"
+                    : "border-[#e1306c]/25 bg-white text-[#1E1E1E] hover:border-[#e1306c] hover:bg-[#e1306c]/5"
                 }`}
               >
                 <span>{item.label}</span>
@@ -307,9 +311,7 @@ export default function Footer({
 
         {/* Copyright */}
         <div className="flex flex-col items-center justify-between gap-2 border-t border-[#1E1E1E]/10 py-4 text-center font-mono text-[10px] tracking-tight text-[#1E1E1E]/45 sm:flex-row sm:gap-4 sm:py-5 sm:text-left sm:text-[11px] md:text-[12px]">
-          <span>
-            © {currentYear ?? 2026} Mr. Mobile Wala
-          </span>
+          <span>© {currentYear ?? 2026} Mr. Mobile Wala</span>
           <span>All rights reserved.</span>
         </div>
       </div>
