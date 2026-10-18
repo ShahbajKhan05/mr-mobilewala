@@ -4,14 +4,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import BrandLogo from "@/components/BrandLogo";
-import AnimatedFooterLink, {
-  FooterLinkPalette,
-} from "@/components/AnimatedFooterLink";
 
 interface FooterLinkItem {
   label: string;
   href: string;
-  palette: FooterLinkPalette;
+  palette: string;
 }
 
 interface SocialLinkItem {
@@ -19,7 +16,6 @@ interface SocialLinkItem {
   href: string;
   iconSrc: string;
   ariaLabel: string;
-  palette: FooterLinkPalette;
   isExternal?: boolean;
 }
 
@@ -29,7 +25,6 @@ const SOCIAL_LINKS: SocialLinkItem[] = [
     href: "https://wa.me/917984057884",
     iconSrc: "/Social-icons/Whatsapp-3d.svg",
     ariaLabel: "Chat on WhatsApp",
-    palette: "emerald-cyan",
     isExternal: true,
   },
   {
@@ -37,7 +32,6 @@ const SOCIAL_LINKS: SocialLinkItem[] = [
     href: "https://instagram.com/mrmobilewala.2.0",
     iconSrc: "/Social-icons/Instagram-3d.svg",
     ariaLabel: "Follow on Instagram",
-    palette: "insta-gradient",
     isExternal: true,
   },
   {
@@ -45,8 +39,6 @@ const SOCIAL_LINKS: SocialLinkItem[] = [
     href: "mailto:contact@mrmobilewala.com",
     iconSrc: "/Social-icons/Gmail-3d.svg",
     ariaLabel: "Send us an Email",
-    palette: "cyan-blue",
-    isExternal: false,
   },
 ];
 
@@ -73,6 +65,32 @@ const LEGAL_LINKS: FooterLinkItem[] = [
 interface FooterProps {
   showReturnToTop?: boolean;
   onReturnToTop?: () => void;
+}
+
+function FooterTextLink({
+  href,
+  label,
+}: {
+  href: string;
+  label: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group inline-flex min-h-7 max-w-full items-center text-sm text-[#1E1E1E]/75 transition-all duration-300 hover:translate-x-1 hover:text-[#00796B] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#00796B]"
+    >
+      <span className="relative">
+        {label}
+        <span className="absolute -bottom-0.5 left-0 h-px w-0 bg-[#00796B] transition-all duration-300 group-hover:w-full" />
+      </span>
+      <span
+        aria-hidden="true"
+        className="ml-1 -translate-x-1 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100"
+      >
+        →
+      </span>
+    </Link>
+  );
 }
 
 export default function Footer({
@@ -105,8 +123,7 @@ export default function Footer({
 
   return (
     <footer className="relative z-20 w-full overflow-hidden border-t border-[#1E1E1E]/10 bg-[#EDEDED] text-[#1E1E1E]">
-      <div className="mx-auto w-full max-w-screen-2xl px-4 pt-8 pb-2 sm:px-6 sm:pt-10 sm:pb-3 md:px-10 md:pt-12 lg:px-12 xl:px-16">
-
+      <div className="mx-auto w-full max-w-screen-2xl px-4 pb-2 pt-8 sm:px-6 sm:pb-3 sm:pt-10 md:px-10 md:pt-12 lg:px-12 xl:px-16">
         {/* Return to top */}
         {showReturnToTop && (
           <div className="mb-8 flex flex-col items-center justify-center border-b border-[#1E1E1E]/10 pb-8 text-center sm:mb-10 sm:pb-9 md:mb-12 md:pb-10">
@@ -134,7 +151,6 @@ export default function Footer({
 
         {/* Responsive links grid */}
         <div className="grid grid-cols-2 gap-x-4 gap-y-7 sm:gap-x-8 sm:gap-y-8 md:grid-cols-4 md:gap-x-6 lg:gap-x-10">
-
           {/* Social */}
           <div className="min-w-0">
             <h3 className="mb-3 font-mono text-[11px] uppercase tracking-[0.13em] text-[#1E1E1E]/45 sm:mb-4 sm:text-[12px] sm:tracking-[0.15em]">
@@ -144,24 +160,33 @@ export default function Footer({
             <ul className="flex flex-col gap-2.5 sm:gap-3">
               {SOCIAL_LINKS.map((social) => (
                 <li key={social.label} className="min-w-0">
-                  <AnimatedFooterLink
+                  <a
                     href={social.href}
-                    label={social.label}
-                    palette={social.palette}
-                    isExternal={social.isExternal}
-                    ariaLabel={social.ariaLabel}
-                    icon={
-                      <div className="flex h-9 w-9 items-center justify-center sm:h-10 sm:w-10 md:h-11 md:w-11">
-                        <Image
-                          src={social.iconSrc}
-                          alt=""
-                          width={44}
-                          height={44}
-                          className="h-full w-full select-none object-contain drop-shadow-sm"
-                        />
-                      </div>
+                    target={social.isExternal ? "_blank" : undefined}
+                    rel={
+                      social.isExternal
+                        ? "noopener noreferrer"
+                        : undefined
                     }
-                  />
+                    aria-label={social.ariaLabel}
+                    className="group inline-flex min-h-10 max-w-full items-center gap-2 text-sm text-[#1E1E1E]/75 transition-all duration-300 hover:translate-x-1 hover:text-[#00796B] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#00796B]"
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center transition-transform duration-300 group-hover:scale-110 sm:h-10 sm:w-10 md:h-11 md:w-11">
+                      <Image
+                        src={social.iconSrc}
+                        alt=""
+                        width={44}
+                        height={44}
+                        className="h-full w-full select-none object-contain drop-shadow-sm"
+                      />
+                    </span>
+                    <span>{social.label}</span>
+                    {social.isExternal && (
+                      <span aria-hidden="true" className="text-xs opacity-50">
+                        ↗
+                      </span>
+                    )}
+                  </a>
                 </li>
               ))}
             </ul>
@@ -176,11 +201,7 @@ export default function Footer({
             <ul className="flex flex-col gap-1.5 sm:gap-2">
               {EXPLORE_LINKS.map((item) => (
                 <li key={item.label} className="min-w-0">
-                  <AnimatedFooterLink
-                    href={item.href}
-                    label={item.label}
-                    palette={item.palette}
-                  />
+                  <FooterTextLink href={item.href} label={item.label} />
                 </li>
               ))}
             </ul>
@@ -195,11 +216,7 @@ export default function Footer({
             <ul className="flex flex-col gap-1.5 sm:gap-2">
               {VISIT_LINKS.map((item) => (
                 <li key={item.label} className="min-w-0">
-                  <AnimatedFooterLink
-                    href={item.href}
-                    label={item.label}
-                    palette={item.palette}
-                  />
+                  <FooterTextLink href={item.href} label={item.label} />
                 </li>
               ))}
             </ul>
@@ -214,11 +231,7 @@ export default function Footer({
             <ul className="flex flex-col gap-1.5 sm:gap-2">
               {LEGAL_LINKS.map((item) => (
                 <li key={item.label} className="min-w-0">
-                  <AnimatedFooterLink
-                    href={item.href}
-                    label={item.label}
-                    palette={item.palette}
-                  />
+                  <FooterTextLink href={item.href} label={item.label} />
                 </li>
               ))}
             </ul>
@@ -250,7 +263,7 @@ export default function Footer({
               <Link
                 key={item.href}
                 href={item.href}
-                className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-full border px-4 py-2.5 text-[11px] font-bold transition-colors sm:px-5 sm:text-[12px] ${
+                className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-full border px-4 py-2.5 text-[11px] font-bold transition-all duration-300 hover:-translate-y-0.5 sm:px-5 sm:text-[12px] ${
                   item.dark
                     ? "border-[#1E1E1E] bg-[#1E1E1E] text-white hover:bg-black"
                     : "border-[#1E1E1E]/15 bg-white text-[#1E1E1E] hover:bg-[#F5F5F5]"
