@@ -1,190 +1,185 @@
+
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
+import {
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Environment, Lightformer, useGLTF } from "@react-three/drei";
+import { Environment, useGLTF } from "@react-three/drei";
+import { clone } from "three/addons/utils/SkeletonUtils.js";
+import * as THREE from "three";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import * as THREE from "three";
 import Link from "next/link";
 
-const FOLDABLE_MODEL_PATH = "/models/iphone-duo-fold.glb";
-const IPHONE_MODEL_PATH = "/phone/source/phone.glb";
-const FOLDABLE_CENTER = [-0.000208, -0.059132, 0.003058] as const;
-const IPHONE_CENTER = [0, -0.075, 0.0024] as const;
+const MODEL_PATH = "/models/iphone-duo-fold.glb";
 
-interface ScrollSceneState {
-  foldableYaw: number;
-  foldableX: number;
-  iphoneYaw: number;
-  iphoneX: number;
-  cameraAzimuth: number;
-  cameraElevation: number;
-  cameraRadius: number;
-  targetX: number;
-  targetY: number;
-  fold: number;
-  entrance: number;
+// Target size of the model's longest dimension in scene units.
+const MODEL_TARGET_SIZE = 1.65;
+
+type PhoneState = {
+  progress: number;
+  x: number;
+  y: number;
+  z: number;
   scale: number;
-}
-
-const INITIAL_SCENE_STATE: ScrollSceneState = {
-  foldableYaw: -0.12,
-  foldableX: -0.37,
-  iphoneYaw: -0.12,
-  iphoneX: 0.35,
-  cameraAzimuth: 0.12,
-  cameraElevation: 0.08,
-  cameraRadius: 4.55,
-  targetX: 0,
-  targetY: 0,
-  fold: 0,
-  entrance: 0.9,
-  scale: 1,
+  rotateX: number;
+  rotateY: number;
+  rotateZ: number;
+  cameraZ: number;
 };
 
-function correctFoldableScreenTexture(scene: THREE.Group) {
-  const adjustedMaterials: Array<{
-    mesh: THREE.Mesh;
-    original: THREE.Material | THREE.Material[];
-    adjusted: THREE.Material[];
-  }> = [];
+const INITIAL_STATE: PhoneState = {
+  progress: 0,
+  x: 1.15,
+  y: -1.9,
+  z: 0,
+  scale: 1,
+  rotateX: -0.1,
+  rotateY: -0.3,
+  rotateZ: 0,
+  cameraZ: 6.5,
+};
 
-  scene.traverse((object) => {
-    if (!(object instanceof THREE.Mesh)) return;
-
-    const materials = Array.isArray(object.material)
-      ? object.material
-      : [object.material];
-    let changed = false;
-    const adjusted = materials.map((material) => {
-      if (
-        material.name !== "C_StarWhite_Screen_Inner" ||
-        !(material instanceof THREE.MeshStandardMaterial) ||
-        !material.emissiveMap
-      ) {
-        return material;
-      }
-
-      const corrected = material.clone();
-      corrected.emissiveMap = material.emissiveMap.clone();
-      corrected.emissiveMap.center.set(0.5, 0.5);
-      corrected.emissiveMap.rotation = Math.PI / 2;
-      corrected.emissiveMap.needsUpdate = true;
-      changed = true;
-      return corrected;
-    });
-
-    if (!changed) return;
-    adjustedMaterials.push({
-      mesh: object,
-      original: object.material,
-      adjusted,
-    });
-    object.material = Array.isArray(object.material) ? adjusted : adjusted[0];
-  });
-
-  return () => {
-    adjustedMaterials.forEach(({ mesh, original, adjusted }) => {
-      mesh.material = original;
-      adjusted.forEach((material) => {
-        if (material instanceof THREE.MeshStandardMaterial) {
-          material.emissiveMap?.dispose();
-        }
-        material.dispose();
-      });
-    });
-  };
-}
-
-function FoldablePhone({
+function DuoFoldPhone({
   stateRef,
-  invalidateRef,
 }: {
-  stateRef: React.RefObject<ScrollSceneState>;
-  invalidateRef: { current: (() => void) | null };
+  stateRef: React.MutableRefObject<PhoneState>;
 }) {
   const rigRef = useRef<THREE.Group>(null);
-  const foldActionRef = useRef<THREE.AnimationAction | null>(null);
+  const fitRef = useRef<THREE.Group>(null);
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
-  const foldDurationRef = useRef(0);
-  const { scene, animations } = useGLTF(FOLDABLE_MODEL_PATH);
-  const invalidate = useThree((state) => state.invalidate);
+  const actionRef = useRef<THREE.AnimationAction | null>(null);
+  const durationRef = useRef(0);
+
+  const { scene, animations } = useGLTF(MODEL_PATH);
+  const model = useMemo(() => clone(scene), [scene]);
+  const { invalidate } = useThree();
 
   useEffect(() => {
-    invalidateRef.current = invalidate;
-    return () => {
-      invalidateRef.current = null;
-    };
-  }, [invalidate, invalidateRef]);
+    const fit = fitRef.current;
+    if (!fit) return;
 
-  useEffect(() => {
-    const restoreScreenMaterials = correctFoldableScreenTexture(scene);
-    const foldClip = animations.find((clip) => clip.name === "open-close");
-    if (!foldClip) {
-      restoreScreenMaterials();
-      throw new Error(
-        `Expected the "open-close" animation in ${FOLDABLE_MODEL_PATH}.`,
+    // Measure the cloned GLB before applying our normalization.
+    model.updateMatrixWorld(true);
+
+    const bounds = new THREE.Box3().setFromObject(model);
+    const dimensions = bounds.getSize(new THREE.Vector3());
+    const center = bounds.getCenter(new THREE.Vector3());
+    const largestDimension = Math.max(
+      dimensions.x,
+      dimensions.y,
+      dimensions.z
+    );
+
+    if (largestDimension > 0) {
+      const normalizationScale =
+        MODEL_TARGET_SIZE / largestDimension;
+
+      fit.scale.setScalar(normalizationScale);
+
+      // Center offset must use the same normalization scale.
+      fit.position.set(
+        -center.x * normalizationScale,
+        -center.y * normalizationScale,
+        -center.z * normalizationScale
       );
+    } else {
+      console.error("The foldable GLB has an invalid bounding box.");
     }
 
-    const mixer = new THREE.AnimationMixer(scene);
-    const action = mixer.clipAction(foldClip);
-    action.setLoop(THREE.LoopOnce, 1);
-    action.clampWhenFinished = true;
-    action.play();
-    action.paused = true;
+    const mixer = new THREE.AnimationMixer(model);
+    const clip =
+      animations.find((item) => item.name === "open-close") ??
+      animations[0];
 
-    foldActionRef.current = action;
+    let action: THREE.AnimationAction | null = null;
+
+    if (clip) {
+      action = mixer.clipAction(clip);
+      action.reset();
+      action.setLoop(THREE.LoopOnce, 1);
+      action.clampWhenFinished = true;
+      action.play();
+      action.paused = true;
+      durationRef.current = clip.duration;
+    } else {
+      console.warn("No animation clip found in the GLB.");
+    }
+
     mixerRef.current = mixer;
-    foldDurationRef.current = foldClip.duration;
+    actionRef.current = action;
+    invalidate();
 
     return () => {
-      action.stop();
       mixer.stopAllAction();
-      foldActionRef.current = null;
       mixerRef.current = null;
-      restoreScreenMaterials();
+      actionRef.current = null;
+      durationRef.current = 0;
     };
-  }, [animations, scene]);
+  }, [model, animations, invalidate]);
 
   useFrame(({ camera, size }) => {
     const rig = rigRef.current;
     if (!rig) return;
 
     const state = stateRef.current;
-    const compact = size.width < 768;
-    const entranceOffset = (1 - state.entrance) * 0.18;
-    rig.rotation.set(0, state.foldableYaw, 0);
-    rig.position.set(
-      state.foldableX * (compact ? 0.72 : 1),
-      (compact ? (size.width < 380 ? -0.95 : -0.8) : 0) - entranceOffset,
-      0.04,
-    );
-    rig.scale.setScalar(
-      (compact ? 7.45 : 8.5) * state.scale * state.entrance,
+    const mobile = size.width < 640;
+    const tablet = size.width >= 640 && size.width < 1024;
+
+    // Mobile: center the product below the copy.
+    // Desktop: keep the product to the right of the headline.
+    const targetX = mobile
+      ? 0
+      : tablet
+        ? 0.7
+        : state.x;
+
+    const targetY = mobile
+      ? -1.0 + state.progress * 0.3
+      : state.y;
+
+    rig.position.set(targetX, targetY, state.z);
+    rig.rotation.set(
+      state.rotateX,
+      state.rotateY,
+      state.rotateZ
     );
 
-    const radius = compact
-      ? size.width < 370
-        ? 7.8
-        : size.width < 430
-          ? 7
-          : 6.2
-      : state.cameraRadius;
-    const horizontalRadius = radius * Math.cos(state.cameraElevation);
-    camera.position.set(
-      state.targetX + Math.sin(state.cameraAzimuth) * horizontalRadius,
-      state.targetY + Math.sin(state.cameraElevation) * radius,
-      Math.cos(state.cameraAzimuth) * horizontalRadius,
-    );
-    camera.lookAt(state.targetX, state.targetY, 0);
+    // The model is already normalized, so avoid multiplying
+    // its size by another large arbitrary factor.
+    const responsiveScale = mobile
+      ? 1.05
+      : tablet
+        ? 1.1
+        : 1.2;
 
-    const action = foldActionRef.current;
+    rig.scale.setScalar(responsiveScale * state.scale);
+
+    if (camera instanceof THREE.PerspectiveCamera) {
+      camera.fov = mobile ? 42 : tablet ? 38 : 35;
+      camera.position.set(
+        0,
+        0,
+        mobile
+          ? Math.max(state.cameraZ, 6.8)
+          : state.cameraZ
+      );
+      camera.lookAt(0, 0, 0);
+      camera.updateProjectionMatrix();
+    }
+
+    const action = actionRef.current;
     const mixer = mixerRef.current;
-    if (action && mixer) {
+
+    if (action && mixer && durationRef.current > 0) {
       action.time =
-        THREE.MathUtils.clamp(state.fold, 0, 1) * foldDurationRef.current;
+        THREE.MathUtils.clamp(state.progress, 0, 1) *
+        durationRef.current;
+
       mixer.update(0);
     }
   });
@@ -192,44 +187,9 @@ function FoldablePhone({
   return (
     <group ref={rigRef}>
       <group rotation={[0, 0, Math.PI / 2]}>
-        <group position={[...FOLDABLE_CENTER]}>
-          <primitive object={scene} dispose={null} />
+        <group ref={fitRef}>
+          <primitive object={model} />
         </group>
-      </group>
-    </group>
-  );
-}
-
-function IphoneModel({
-  stateRef,
-}: {
-  stateRef: React.RefObject<ScrollSceneState>;
-}) {
-  const rigRef = useRef<THREE.Group>(null);
-  const { scene } = useGLTF(IPHONE_MODEL_PATH);
-
-  useFrame(({ size }) => {
-    const rig = rigRef.current;
-    if (!rig) return;
-
-    const compact = size.width < 768;
-    const state = stateRef.current;
-    const entranceOffset = (1 - state.entrance) * 0.18;
-    rig.position.set(
-      state.iphoneX * (compact ? 0.72 : 1),
-      (compact ? (size.width < 380 ? -0.95 : -0.8) : 0) - entranceOffset,
-      -0.04,
-    );
-    rig.rotation.y = state.iphoneYaw;
-    rig.scale.setScalar(
-      (compact ? 7.45 : 8.35) * state.scale * state.entrance,
-    );
-  });
-
-  return (
-    <group ref={rigRef}>
-      <group position={[...IPHONE_CENTER]}>
-        <primitive object={scene} dispose={null} />
       </group>
     </group>
   );
@@ -237,347 +197,214 @@ function IphoneModel({
 
 export default function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  const introCopyRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLHeadingElement>(null);
-  const sceneStateRef = useRef<ScrollSceneState>({ ...INITIAL_SCENE_STATE });
-  const invalidateRef = useRef<(() => void) | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
+  const copyRef = useRef<HTMLDivElement>(null);
+  const stateRef = useRef<PhoneState>({ ...INITIAL_STATE });
 
   useEffect(() => {
-    const mobileViewport = window.matchMedia("(max-width: 767px)");
-    const updateViewport = () => setIsMobile(mobileViewport.matches);
-
-    updateViewport();
-    mobileViewport.addEventListener("change", updateViewport);
-
-    return () => {
-      mobileViewport.removeEventListener("change", updateViewport);
-    };
-  }, []);
-
-  useEffect(() => {
-    const section = sectionRef.current;
-    if (!section) return;
-
     gsap.registerPlugin(ScrollTrigger);
+
+    const section = sectionRef.current;
+    const copy = copyRef.current;
+
+    if (!section || !copy) return;
+
     const media = gsap.matchMedia();
-    const context = gsap.context(() => {
-      const buildTimeline = (compact: boolean, tablet: boolean) => {
-        const scene = sceneStateRef.current;
-        Object.assign(scene, INITIAL_SCENE_STATE);
 
-        const movement = tablet ? 0.72 : compact ? 0.3 : 1;
-        const startScale = compact ? 0.94 : INITIAL_SCENE_STATE.entrance;
-        scene.entrance = startScale;
-        const brandTitle = compact
-          ? null
-          : section.parentElement?.querySelector("#brands-title");
-        const serviceTitle = compact
-          ? null
-          : section.parentElement?.querySelector("#services-title");
-        const serviceCards = compact
-          ? null
-          : section.parentElement?.querySelectorAll("[data-story-card]");
+    media.add(
+      "(prefers-reduced-motion: no-preference)",
+      () => {
+        const state = stateRef.current;
+        Object.assign(state, INITIAL_STATE);
 
-        if (brandTitle) gsap.set(brandTitle, { autoAlpha: 0, y: 16 });
-        if (serviceTitle) gsap.set(serviceTitle, { autoAlpha: 0, y: 20 });
-        if (serviceCards?.length) {
-          gsap.set(serviceCards, { autoAlpha: 0, y: 18 });
-        }
+        const mobileQuery = window.matchMedia("(max-width: 639px)").matches;
 
         const timeline = gsap.timeline({
           scrollTrigger: {
             trigger: section,
             start: "top top",
-            end: compact ? "bottom top" : "+=100%",
-            pin: compact ? false : section,
+            end: mobileQuery ? "+=180%" : "+=250%",
+            pin: true,
             pinSpacing: true,
-            anticipatePin: compact ? 0 : 1,
-            scrub: compact ? true : tablet ? 0.4 : 0.55,
+            scrub: 0.8,
+            anticipatePin: 1,
             invalidateOnRefresh: true,
-            onUpdate: () => invalidateRef.current?.(),
           },
         });
 
         timeline
-          .to(
-            scene,
-            {
-              entrance: 1,
-              duration: compact ? 0.18 : 0.1,
-              ease: "none",
-            },
-            0,
-          )
-          .to(
-            scene,
-            {
-              foldableYaw: 0.2 * movement,
-              iphoneYaw: 1.05 * movement,
-              fold: 0.45 * movement,
-              cameraAzimuth: 0.02 * movement,
-              cameraElevation: 0.1 * movement,
-              cameraRadius: 4.45,
-              scale: 0.94,
-              duration: 0.22,
-              ease: "none",
-            },
-            0.12,
-          )
-          .to(
-            scene,
-            {
-              foldableX: -0.5,
-              iphoneX: 0.5,
-              foldableYaw: 0.68 * movement,
-              iphoneYaw: 2.62 * movement,
-              fold: 0.86 * movement,
-              cameraAzimuth: 0.15 * movement,
-              cameraElevation: 0.13 * movement,
-              cameraRadius: tablet ? 4.75 : compact ? 4.55 : 4.7,
-              scale: compact ? 0.94 : tablet ? 0.94 : 0.9,
-              duration: 0.3,
-              ease: "none",
-            },
-            0.4,
-          )
-          .to(
-            scene,
-            {
-              foldableX: -0.44,
-              iphoneX: 0.44,
-              foldableYaw: 0.42 * movement,
-              iphoneYaw: 2.38 * movement,
-              fold: 0.78 * movement,
-              cameraAzimuth: 0.05 * movement,
-              cameraElevation: 0.07 * movement,
-              cameraRadius: tablet ? 4.8 : compact ? 4.6 : 4.85,
-              scale: compact ? 0.94 : tablet ? 0.92 : 0.86,
-              duration: 0.28,
-              ease: "none",
-            },
-            0.72,
-          );
+          .to(state, {
+            y: mobileQuery ? -0.35 : -0.65,
+            scale: 1.05,
+            progress: 0.2,
+            rotateX: -0.05,
+            rotateY: -0.1,
+            duration: 1,
+            ease: "none",
+          })
+          .to(state, {
+            x: mobileQuery ? 0 : 0.85,
+            y: mobileQuery ? -0.45 : 0.05,
+            scale: 1.12,
+            progress: 0.48,
+            rotateX: 0.02,
+            rotateY: 0.25,
+            duration: 1.2,
+            ease: "none",
+          })
+          .to(state, {
+            x: mobileQuery ? 0 : 0.65,
+            y: mobileQuery ? -0.35 : 0.08,
+            scale: 1.2,
+            progress: 0.76,
+            rotateX: -0.04,
+            rotateY: 0.6,
+            rotateZ: 0.02,
+            duration: 1.2,
+            ease: "none",
+          })
+          .to(state, {
+            x: mobileQuery ? 0 : 0.85,
+            y: mobileQuery ? -0.45 : 0,
+            scale: 1.08,
+            progress: 1,
+            rotateX: 0,
+            rotateY: 0.9,
+            rotateZ: 0,
+            duration: 1,
+            ease: "none",
+          });
 
-        if (!compact) {
-          timeline.to(
-            introCopyRef.current,
-            {
-              autoAlpha: 0,
-              y: -18,
-              duration: 0.12,
-              ease: "none",
-            },
-            0.14,
-          );
+        gsap.to(copy, {
+          y: -18,
+          autoAlpha: 0,
+          ease: "none",
+          scrollTrigger: {
+            trigger: section,
+            start: "top top",
+            end: mobileQuery ? "+=45%" : "+=65%",
+            scrub: true,
+          },
+        });
 
-          if (brandTitle) {
-            timeline.to(
-              brandTitle,
-              {
-                autoAlpha: 1,
-                y: 0,
-                duration: 0.1,
-                ease: "none",
-              },
-              0.31,
-            );
-          }
-
-          if (serviceTitle) {
-            timeline.to(
-              serviceTitle,
-              {
-                autoAlpha: 1,
-                y: 0,
-                duration: 0.1,
-                ease: "none",
-              },
-              0.5,
-            );
-          }
-
-          if (serviceCards?.length) {
-            timeline.to(
-              serviceCards,
-              {
-                autoAlpha: 1,
-                y: 0,
-                duration: 0.12,
-                stagger: 0.025,
-                ease: "none",
-              },
-              0.56,
-            );
-          }
-        }
-
-        if (titleRef.current) {
-          gsap.fromTo(
-            titleRef.current,
-            { clipPath: "inset(0 0 100% 0)", y: 20 },
-            {
-              clipPath: "inset(0 0 0% 0)",
-              y: 0,
-              duration: 0.8,
-              delay: 0.12,
-              ease: "power3.out",
-            },
-          );
-        }
+        const frame = requestAnimationFrame(() => {
+          ScrollTrigger.refresh();
+        });
 
         return () => {
+          cancelAnimationFrame(frame);
           timeline.scrollTrigger?.kill();
           timeline.kill();
-          Object.assign(scene, INITIAL_SCENE_STATE);
-          invalidateRef.current?.();
-          gsap.killTweensOf(scene);
+          gsap.killTweensOf(copy);
+          Object.assign(state, INITIAL_STATE);
         };
-      };
+      }
+    );
 
-      media.add(
-        "(prefers-reduced-motion: no-preference) and (min-width: 1024px)",
-        () => buildTimeline(false, false),
-      );
-      media.add(
-        "(prefers-reduced-motion: no-preference) and (min-width: 768px) and (max-width: 1023px)",
-        () => buildTimeline(false, true),
-      );
-      media.add(
-        "(prefers-reduced-motion: no-preference) and (max-width: 767px)",
-        () => buildTimeline(true, false),
-      );
-    }, section);
-
-    return () => {
-      context.revert();
-      media.revert();
-    };
+    return () => media.revert();
   }, []);
 
   return (
     <section
       ref={sectionRef}
       aria-labelledby="hero-title"
-      className="relative z-0 h-svh overflow-hidden bg-[#FAFAF8] text-[#191a18]"
+      className="relative z-10 h-svh min-h-[680px] overflow-hidden bg-[#FAFAF8] text-[#191a18] sm:min-h-[620px]"
     >
-      <div className="absolute inset-0 overflow-hidden bg-[#FAFAF8]">
+      <div className="pointer-events-none absolute inset-0">
         <Canvas
-          dpr={isMobile ? 1 : [1, 1.35]}
-          frameloop="demand"
-          camera={{
-            position: [0, 0, INITIAL_SCENE_STATE.cameraRadius],
-            fov: 32,
-          }}
+          dpr={[1, 1.35]}
+          camera={{ position: [0, 0, 6.5], fov: 35 }}
           gl={{
             alpha: false,
-            antialias: !isMobile,
-            powerPreference: isMobile ? "low-power" : "high-performance",
+            antialias: true,
+            powerPreference: "high-performance",
           }}
-          shadows={false}
-          className="pointer-events-none !absolute inset-0 md:!left-[34%] md:!right-0 md:!w-[66%]"
-          aria-hidden="true"
-          fallback={
-            <div className="flex h-full items-center justify-center px-6 text-center text-sm text-black/55">
-              The 3D phone preview is unavailable on this device.
-            </div>
-          }
+          onCreated={({ gl }) => {
+            gl.setClearColor("#FAFAF8", 1);
+          }}
         >
           <color attach="background" args={["#FAFAF8"]} />
-          <ambientLight intensity={0.65} />
-          <hemisphereLight args={["#ffffff", "#dedbd4", 0.72]} />
-          <directionalLight
-            color="#fffaf0"
-            intensity={2.25}
-            position={[-3.5, 4, 5]}
+          <ambientLight intensity={0.9} />
+          <hemisphereLight
+            args={["#ffffff", "#c9c3b8", 1.1]}
           />
           <directionalLight
-            color="#fff3df"
-            intensity={0.95}
-            position={[3, 0.5, 4]}
+            intensity={2.5}
+            position={[-4, 5, 6]}
           />
           <directionalLight
-            color="#dbe4ed"
-            intensity={1.1}
-            position={[4, 1.5, -3]}
+            intensity={1.5}
+            position={[4, 2, 3]}
           />
-          <Environment resolution={isMobile ? 64 : 128}>
-            <Lightformer
-              form="rect"
-              intensity={1.3}
-              color="#fffdf8"
-              position={[-3, 2, 2]}
-              rotation={[0, 0.3, 0]}
-              scale={[4.5, 5.5, 1]}
-            />
-            <Lightformer
-              form="rect"
-              intensity={0.7}
-              color="#d9e0e5"
-              position={[3, -0.5, -2]}
-              rotation={[0, -0.5, 0]}
-              scale={[3, 4.5, 1]}
-            />
-          </Environment>
+          <directionalLight
+            intensity={0.7}
+            position={[0, -3, -4]}
+          />
+
           <Suspense fallback={null}>
-            <FoldablePhone
-              stateRef={sceneStateRef}
-              invalidateRef={invalidateRef}
-            />
-            <IphoneModel stateRef={sceneStateRef} />
+            <Environment preset="studio" />
+            <DuoFoldPhone stateRef={stateRef} />
           </Suspense>
         </Canvas>
+      </div>
 
-        <div className="pointer-events-none absolute inset-x-5 top-20 z-10 flex justify-between gap-4 sm:inset-x-8 sm:top-24 md:inset-x-12 md:top-28">
-          <p className="text-[9px] font-medium uppercase tracking-[0.24em] text-black/70 sm:text-[10px]">
-            MR Mobile Wala
-          </p>
-          <p className="text-right text-[9px] font-medium uppercase tracking-[0.16em] text-black/70 sm:text-[10px] sm:tracking-[0.24em]">
-            Made personal. Built to move.
-          </p>
-        </div>
+      <div className="pointer-events-none absolute inset-x-5 top-20 z-10 flex justify-between gap-4 sm:inset-x-8 sm:top-24 md:inset-x-12 md:top-28">
+        <p className="text-[9px] font-medium uppercase tracking-[0.24em] text-black/70 sm:text-[10px]">
+          MR Mobile Wala
+        </p>
+        <p className="text-right text-[9px] font-medium uppercase tracking-[0.16em] text-black/70 sm:text-[10px]">
+          Made personal. Built to move.
+        </p>
+      </div>
 
-        <div
-          ref={introCopyRef}
-          className="pointer-events-none absolute inset-x-5 top-[21%] z-10 flex flex-col gap-4 sm:inset-x-8 sm:top-[20%] md:inset-x-12 md:top-auto md:bottom-[18%] md:flex-row md:items-end md:justify-between md:gap-4"
-        >
-          <div className="pointer-events-auto max-w-[min(100%,34rem)] md:max-w-[40%]">
-            <p className="text-[9px] font-medium uppercase tracking-[0.2em] text-black/70 sm:text-[10px] sm:tracking-[0.28em]">
+      <div
+        ref={copyRef}
+        className="pointer-events-none absolute inset-0 z-10"
+      >
+        <div className="absolute inset-x-5 top-[12%] max-w-[min(100%-2.5rem,34rem)] sm:inset-x-8 sm:top-[24%] md:inset-x-12 md:top-auto md:bottom-[18%] md:max-w-[42%]">
+          <div className="pointer-events-auto">
+            <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-black/65">
               Buy · Sell · Repair
             </p>
+
             <h1
-              ref={titleRef}
               id="hero-title"
-              className="mt-2 max-w-[12ch] text-[clamp(2rem,8vw,3.5rem)] font-semibold leading-[0.94] tracking-[-0.06em] md:max-w-[11ch] md:text-[clamp(3rem,5.1vw,5rem)]"
+              className="mt-3 max-w-[11ch] text-[clamp(2.25rem,6.5vw,5rem)] font-semibold leading-[0.94] tracking-[-0.06em]"
             >
               Your next move, made personal.
             </h1>
-            <div className="mt-4 flex flex-wrap items-center gap-3 sm:mt-5 md:mt-6">
+
+            <p className="mt-3 max-w-sm text-sm leading-5 text-black/65 sm:mt-4 sm:text-base sm:leading-6">
+              Find your next phone, sell your old device,
+              or get it repaired. Personal service,
+              straightforward advice.
+            </p>
+
+            <div className="mt-4 flex flex-wrap items-center gap-3 sm:mt-6">
               <Link
                 href="#services"
-                className="inline-flex min-h-11 items-center justify-center gap-3 rounded-full bg-[#263D38] px-5 text-xs font-medium text-white transition-colors hover:bg-[#1E302C] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#263D38] sm:px-6 sm:text-sm"
+                className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#263D38] px-5 text-sm font-medium text-white transition-colors hover:bg-[#1E302C]"
               >
                 Explore services
-                <span aria-hidden="true">&rarr;</span>
+                <span className="ml-2">&rarr;</span>
               </Link>
+
               <Link
-                href="mailto:contact@mrmobilewala.com"
-                className="inline-flex min-h-11 items-center text-xs font-medium text-[#191a18] underline decoration-black/35 underline-offset-4 transition-colors hover:decoration-black focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#263D38] sm:text-sm"
+                href="mailto:mrmobilewala610@gmail.com"
+                className="inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4"
               >
                 Talk to us
               </Link>
             </div>
           </div>
-          <div className="mb-1 hidden shrink-0 items-center gap-2 text-[8px] uppercase tracking-[0.14em] text-black/70 sm:flex sm:gap-4 sm:text-[10px] sm:tracking-[0.24em] md:mb-0">
-            <span className="hidden sm:inline">Explore every angle</span>
-            <span aria-hidden="true" className="h-8 w-px bg-black/25" />
-            <span>Scroll</span>
-          </div>
         </div>
+      </div>
+
+      <div className="pointer-events-none absolute bottom-5 right-5 z-10 flex items-center gap-3 text-[9px] uppercase tracking-[0.2em] text-black/60 sm:bottom-7 sm:right-10 sm:text-[10px]">
+        <span className="h-8 w-px bg-black/25" />
+        Scroll to explore
       </div>
     </section>
   );
 }
 
-useGLTF.preload(FOLDABLE_MODEL_PATH);
-useGLTF.preload(IPHONE_MODEL_PATH);
+useGLTF.preload(MODEL_PATH);

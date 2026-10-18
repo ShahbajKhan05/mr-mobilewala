@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
+import SmoothScroll from "@/components/SmoothScroll";
 import {
   BRAND_LOGO_PATH,
   INSTAGRAM_URL,
@@ -103,7 +104,7 @@ export default function RootLayout({
             }}
           />
         )}
-        {children}
+        <SmoothScroll>{children}</SmoothScroll>
       </body>
     </html>
   );

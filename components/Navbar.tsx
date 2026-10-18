@@ -37,7 +37,7 @@ const NAV_LINKS = [
   { href: "/accessories", label: "Accessories" },
   { href: "/services", label: "Services" },
   { href: "/about", label: "About" },
-  { href: "/team", label: "Team" },
+  
   { href: "/contact", label: "Contact" },
 ];
 
@@ -836,15 +836,7 @@ export default function Navbar() {
 
 
               
-            <Link
-  href="/team"
-  onClick={() => setIsOpen(false)}
-  className="menu-item-anim flex items-center py-3 border-b border-[#1E1E1E]/10 group/item"
->
-  <span className="font-medium text-[17px] md:text-[19px] xl:text-[20px] tracking-tight text-[#1E1E1E] transition-transform duration-300 group-hover/item:translate-x-1.5">
-    Team
-  </span>
-</Link>
+            
             <Link
 
               href="/contact"
