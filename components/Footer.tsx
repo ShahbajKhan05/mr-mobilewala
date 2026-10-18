@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import BrandLogo from "@/components/BrandLogo";
@@ -83,6 +84,7 @@ function FooterTextLink({
         {label}
         <span className="absolute -bottom-0.5 left-0 h-px w-0 bg-[#00796B] transition-all duration-300 group-hover:w-full" />
       </span>
+
       <span
         aria-hidden="true"
         className="ml-1 -translate-x-1 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100"
@@ -97,6 +99,12 @@ export default function Footer({
   showReturnToTop,
   onReturnToTop,
 }: FooterProps) {
+  const [currentYear, setCurrentYear] = useState<number | null>(null);
+
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
+
   const handleReturnToTop = () => {
     if (onReturnToTop) {
       onReturnToTop();
@@ -180,9 +188,14 @@ export default function Footer({
                         className="h-full w-full select-none object-contain drop-shadow-sm"
                       />
                     </span>
+
                     <span>{social.label}</span>
+
                     {social.isExternal && (
-                      <span aria-hidden="true" className="text-xs opacity-50">
+                      <span
+                        aria-hidden="true"
+                        className="text-xs opacity-50"
+                      >
                         ↗
                       </span>
                     )}
@@ -201,7 +214,10 @@ export default function Footer({
             <ul className="flex flex-col gap-1.5 sm:gap-2">
               {EXPLORE_LINKS.map((item) => (
                 <li key={item.label} className="min-w-0">
-                  <FooterTextLink href={item.href} label={item.label} />
+                  <FooterTextLink
+                    href={item.href}
+                    label={item.label}
+                  />
                 </li>
               ))}
             </ul>
@@ -216,7 +232,10 @@ export default function Footer({
             <ul className="flex flex-col gap-1.5 sm:gap-2">
               {VISIT_LINKS.map((item) => (
                 <li key={item.label} className="min-w-0">
-                  <FooterTextLink href={item.href} label={item.label} />
+                  <FooterTextLink
+                    href={item.href}
+                    label={item.label}
+                  />
                 </li>
               ))}
             </ul>
@@ -231,7 +250,10 @@ export default function Footer({
             <ul className="flex flex-col gap-1.5 sm:gap-2">
               {LEGAL_LINKS.map((item) => (
                 <li key={item.label} className="min-w-0">
-                  <FooterTextLink href={item.href} label={item.label} />
+                  <FooterTextLink
+                    href={item.href}
+                    label={item.label}
+                  />
                 </li>
               ))}
             </ul>
@@ -285,7 +307,9 @@ export default function Footer({
 
         {/* Copyright */}
         <div className="flex flex-col items-center justify-between gap-2 border-t border-[#1E1E1E]/10 py-4 text-center font-mono text-[10px] tracking-tight text-[#1E1E1E]/45 sm:flex-row sm:gap-4 sm:py-5 sm:text-left sm:text-[11px] md:text-[12px]">
-          <span>© {new Date().getFullYear()} Mr. Mobile Wala</span>
+          <span>
+            © {currentYear ?? 2026} Mr. Mobile Wala
+          </span>
           <span>All rights reserved.</span>
         </div>
       </div>
