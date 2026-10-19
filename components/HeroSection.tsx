@@ -16,9 +16,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Link from "next/link";
 
 const MODEL_PATH = "/models/iphone-duo-fold.glb";
-
-// Target size of the model's longest dimension in scene units.
-const MODEL_TARGET_SIZE = 1.65;
+const MODEL_TARGET_SIZE = 1.9;
 
 type PhoneState = {
   progress: number;
@@ -35,7 +33,7 @@ type PhoneState = {
 const INITIAL_STATE: PhoneState = {
   progress: 0,
   x: 1.15,
-  y: -1.9,
+  y: -0.85,
   z: 0,
   scale: 1,
   rotateX: -0.1,
@@ -63,35 +61,39 @@ function DuoFoldPhone({
     const fit = fitRef.current;
     if (!fit) return;
 
-    // Measure the cloned GLB before applying our normalization.
     model.updateMatrixWorld(true);
 
     const bounds = new THREE.Box3().setFromObject(model);
     const dimensions = bounds.getSize(new THREE.Vector3());
     const center = bounds.getCenter(new THREE.Vector3());
+
     const largestDimension = Math.max(
       dimensions.x,
       dimensions.y,
       dimensions.z
     );
 
-    if (largestDimension > 0) {
-      const normalizationScale =
-        MODEL_TARGET_SIZE / largestDimension;
-
-      fit.scale.setScalar(normalizationScale);
-
-      // Center offset must use the same normalization scale.
-      fit.position.set(
-        -center.x * normalizationScale,
-        -center.y * normalizationScale,
-        -center.z * normalizationScale
+    if (!Number.isFinite(largestDimension) || largestDimension <= 0) {
+      console.error(
+        "The foldable GLB has an invalid bounding box.",
+        dimensions
       );
-    } else {
-      console.error("The foldable GLB has an invalid bounding box.");
+      return;
     }
 
+    // Normalize the model while preserving its original materials.
+    const normalizationScale =
+      MODEL_TARGET_SIZE / largestDimension;
+
+    fit.scale.setScalar(normalizationScale);
+    fit.position.set(
+      -center.x * normalizationScale,
+      -center.y * normalizationScale,
+      -center.z * normalizationScale
+    );
+
     const mixer = new THREE.AnimationMixer(model);
+
     const clip =
       animations.find((item) => item.name === "open-close") ??
       animations[0];
@@ -106,12 +108,26 @@ function DuoFoldPhone({
       action.play();
       action.paused = true;
       durationRef.current = clip.duration;
+
+      // Apply the first animation frame immediately.
+      action.time = 0;
+      mixer.update(0);
     } else {
-      console.warn("No animation clip found in the GLB.");
+      console.warn(
+        "No animation clip found in the GLB. The static model will still render."
+      );
+      durationRef.current = 0;
     }
 
     mixerRef.current = mixer;
     actionRef.current = action;
+
+    console.info("Foldable phone model loaded:", {
+      modelPath: MODEL_PATH,
+      dimensions,
+      animationClips: animations.map((item) => item.name),
+    });
+
     invalidate();
 
     return () => {
@@ -130,8 +146,6 @@ function DuoFoldPhone({
     const mobile = size.width < 640;
     const tablet = size.width >= 640 && size.width < 1024;
 
-    // Mobile: center the product below the copy.
-    // Desktop: keep the product to the right of the headline.
     const targetX = mobile
       ? 0
       : tablet
@@ -139,28 +153,28 @@ function DuoFoldPhone({
         : state.x;
 
     const targetY = mobile
-      ? -1.0 + state.progress * 0.3
+      ? -0.9 + state.progress * 0.2
       : state.y;
 
     rig.position.set(targetX, targetY, state.z);
+
     rig.rotation.set(
       state.rotateX,
       state.rotateY,
       state.rotateZ
     );
 
-    // The model is already normalized, so avoid multiplying
-    // its size by another large arbitrary factor.
     const responsiveScale = mobile
-      ? 1.05
+      ? 0.9
       : tablet
-        ? 1.1
-        : 1.2;
+        ? 1
+        : 1.1;
 
     rig.scale.setScalar(responsiveScale * state.scale);
 
     if (camera instanceof THREE.PerspectiveCamera) {
-      camera.fov = mobile ? 42 : tablet ? 38 : 35;
+      camera.fov = mobile ? 40 : tablet ? 38 : 35;
+
       camera.position.set(
         0,
         0,
@@ -168,6 +182,7 @@ function DuoFoldPhone({
           ? Math.max(state.cameraZ, 6.8)
           : state.cameraZ
       );
+
       camera.lookAt(0, 0, 0);
       camera.updateProjectionMatrix();
     }
@@ -195,10 +210,64 @@ function DuoFoldPhone({
   );
 }
 
+function PhoneBackdrop({
+  stateRef,
+}: {
+  stateRef: React.MutableRefObject<PhoneState>;
+}) {
+  return (
+    <div className="pointer-events-none absolute inset-0">
+      <Canvas
+        dpr={[1, 1.35]}
+        camera={{ position: [0, 0, 6.5], fov: 35 }}
+        gl={{
+          alpha: false,
+          antialias: true,
+          powerPreference: "high-performance",
+        }}
+        onCreated={({ gl }) => {
+          gl.setClearColor("#FAFAF8", 1);
+        }}
+      >
+        <color attach="background" args={["#FAFAF8"]} />
+
+        <ambientLight intensity={0.9} />
+
+        <hemisphereLight
+          args={["#ffffff", "#c9c3b8", 1.1]}
+        />
+
+        <directionalLight
+          intensity={2.5}
+          position={[-4, 5, 6]}
+        />
+
+        <directionalLight
+          intensity={1.5}
+          position={[4, 2, 3]}
+        />
+
+        <directionalLight
+          intensity={0.7}
+          position={[0, -3, -4]}
+        />
+
+        <Suspense fallback={null}>
+          <Environment preset="studio" />
+          <DuoFoldPhone stateRef={stateRef} />
+        </Suspense>
+      </Canvas>
+    </div>
+  );
+}
+
 export default function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const copyRef = useRef<HTMLDivElement>(null);
-  const stateRef = useRef<PhoneState>({ ...INITIAL_STATE });
+
+  const stateRef = useRef<PhoneState>({
+    ...INITIAL_STATE,
+  });
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -214,9 +283,12 @@ export default function HeroSection() {
       "(prefers-reduced-motion: no-preference)",
       () => {
         const state = stateRef.current;
+
         Object.assign(state, INITIAL_STATE);
 
-        const mobileQuery = window.matchMedia("(max-width: 639px)").matches;
+        const mobileQuery = window.matchMedia(
+          "(max-width: 639px)"
+        ).matches;
 
         const timeline = gsap.timeline({
           scrollTrigger: {
@@ -309,48 +381,13 @@ export default function HeroSection() {
       aria-labelledby="hero-title"
       className="relative z-10 h-svh min-h-[680px] overflow-hidden bg-[#FAFAF8] text-[#191a18] sm:min-h-[620px]"
     >
-      <div className="pointer-events-none absolute inset-0">
-        <Canvas
-          dpr={[1, 1.35]}
-          camera={{ position: [0, 0, 6.5], fov: 35 }}
-          gl={{
-            alpha: false,
-            antialias: true,
-            powerPreference: "high-performance",
-          }}
-          onCreated={({ gl }) => {
-            gl.setClearColor("#FAFAF8", 1);
-          }}
-        >
-          <color attach="background" args={["#FAFAF8"]} />
-          <ambientLight intensity={0.9} />
-          <hemisphereLight
-            args={["#ffffff", "#c9c3b8", 1.1]}
-          />
-          <directionalLight
-            intensity={2.5}
-            position={[-4, 5, 6]}
-          />
-          <directionalLight
-            intensity={1.5}
-            position={[4, 2, 3]}
-          />
-          <directionalLight
-            intensity={0.7}
-            position={[0, -3, -4]}
-          />
-
-          <Suspense fallback={null}>
-            <Environment preset="studio" />
-            <DuoFoldPhone stateRef={stateRef} />
-          </Suspense>
-        </Canvas>
-      </div>
+      <PhoneBackdrop stateRef={stateRef} />
 
       <div className="pointer-events-none absolute inset-x-5 top-20 z-10 flex justify-between gap-4 sm:inset-x-8 sm:top-24 md:inset-x-12 md:top-28">
         <p className="text-[9px] font-medium uppercase tracking-[0.24em] text-black/70 sm:text-[10px]">
           MR Mobile Wala
         </p>
+
         <p className="text-right text-[9px] font-medium uppercase tracking-[0.16em] text-black/70 sm:text-[10px]">
           Made personal. Built to move.
         </p>

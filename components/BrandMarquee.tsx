@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from "next/image";
@@ -48,10 +47,11 @@ export default function BrandMarquee() {
 
     const observer = new IntersectionObserver(
       ([entry]) => setIsInView(entry.isIntersecting),
-      { threshold: 0.1 },
+      { threshold: 0.1 }
     );
 
     observer.observe(viewport);
+
     return () => observer.disconnect();
   }, []);
 
@@ -61,8 +61,9 @@ export default function BrandMarquee() {
       aria-labelledby="brands-title"
       className="brand-showcase w-full overflow-hidden border-y border-[#eee8ef] bg-white py-7 sm:py-9"
     >
-      <div className="mx-auto mb-5 flex max-w-7xl items-end justify-between gap-4 px-5 sm:mb-6 sm:px-8 lg:px-12">
-        <div>
+      {/* Centered heading */}
+      <div className="mx-auto mb-6 flex max-w-7xl flex-col items-center justify-center gap-3 px-5 text-center sm:mb-7 sm:px-8 lg:px-12">
+        <div className="flex flex-col items-center text-center">
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#e1306c] sm:text-[11px]">
             Trusted technology brands
           </p>
@@ -81,10 +82,11 @@ export default function BrandMarquee() {
 
         <span
           aria-hidden="true"
-          className="hidden h-1 w-16 shrink-0 rounded-full bg-gradient-to-r from-[#ff792d] via-[#e1306c] to-[#833ab4] sm:block"
+          className="h-1 w-16 shrink-0 rounded-full bg-gradient-to-r from-[#ff792d] via-[#e1306c] to-[#833ab4]"
         />
       </div>
 
+      {/* Scrolling brand logos */}
       <div
         ref={viewportRef}
         className="brand-showcase__viewport"
@@ -99,11 +101,13 @@ export default function BrandMarquee() {
         </div>
       </div>
 
-      <div className="mx-auto mt-5 flex max-w-7xl items-center gap-2 px-5 sm:px-8 lg:px-12">
+      {/* Centered bottom tagline */}
+      <div className="mx-auto mt-5 flex max-w-7xl items-center justify-center gap-2 px-5 text-center sm:px-8 lg:px-12">
         <span
           aria-hidden="true"
-          className="h-1.5 w-1.5 rounded-full bg-[#e1306c]"
+          className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#e1306c]"
         />
+
         <p className="text-[11px] text-[#6e6e73] sm:text-xs">
           Multiple brands. More ways to find your fit.
         </p>
@@ -149,12 +153,13 @@ export default function BrandMarquee() {
           height: 46px;
         }
 
-        /* All SVG logos stay in their original colours */
+        /* Preserve original SVG colours */
         .brand-showcase__logo {
           display: block;
           width: auto;
           max-width: 88px;
-          height: 30px;
+          height: auto;
+          max-height: 30px;
           object-fit: contain;
           opacity: 1;
           filter: none;
@@ -166,12 +171,13 @@ export default function BrandMarquee() {
           from {
             transform: translate3d(0, 0, 0);
           }
+
           to {
             transform: translate3d(-50%, 0, 0);
           }
         }
 
-        /* Desktop hover: keep colours, add a subtle lift */
+        /* Desktop hover */
         @media (hover: hover) and (pointer: fine) {
           .brand-showcase__item:hover .brand-showcase__logo {
             transform: translateY(-2px);
@@ -182,7 +188,8 @@ export default function BrandMarquee() {
           }
         }
 
-        .brand-showcase__viewport[data-in-view="true"] .brand-showcase__track {
+        .brand-showcase__viewport[data-in-view="true"]
+        .brand-showcase__track {
           animation-play-state: running;
         }
 
@@ -203,7 +210,7 @@ export default function BrandMarquee() {
 
           .brand-showcase__logo {
             max-width: 112px;
-            height: 36px;
+            max-height: 36px;
           }
         }
 
@@ -220,7 +227,7 @@ export default function BrandMarquee() {
 
           .brand-showcase__logo {
             max-width: 120px;
-            height: 40px;
+            max-height: 40px;
           }
         }
 
