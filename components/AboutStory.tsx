@@ -8,43 +8,49 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-const VIDEO_PATH = "/videos/mobile-showcase.mp4";
-
 const services = [
   {
     title: "Latest Smartphones",
     description: "Explore phones from popular brands.",
+    video: "https://www.youtube.com/embed/bxSGfpoFP30",
+    type: "youtube",
   },
-  {
-    title: "Accessories",
-    description: "Covers, chargers, earphones and more.",
+ {
+    title: "Latest Accessories",
+    description: "Discover the latest mobile accessories.",
+    video: "https://www.youtube.com/embed/oWaYlnV0VuU",
+    type: "youtube",
   },
   {
     title: "Repair & Service",
     description: "Ask about support for your phone.",
+    video: "https://www.youtube.com/embed/6bOvXpE9M_s",
+    type: "youtube",
   },
-];
+] as const;
+
 
 const highlights = [
   {
     icon: "▣",
-    title: "What we offer",
-    description: "Phones, accessories and repair.",
+    title: "Latest Smartphones",
+    description: "Explore the latest phones from leading brands.",
     iconColor: "text-[#7c3aed]",
   },
   {
     icon: "↗",
-    title: "Our approach",
-    description: "Clear options, shaped around you.",
+    title: "Smart Accessories",
+    description: "Find accessories for your everyday mobile needs.",
     iconColor: "text-[#e1306c]",
   },
   {
     icon: "✓",
-    title: "Our commitment",
-    description: "Help you make an informed choice.",
+    title: "Customer Support",
+    description: "Get friendly guidance for your mobile needs.",
     iconColor: "text-[#087443]",
   },
 ];
+
 
 function SectionEyebrow({ children }: { children: React.ReactNode }) {
   return (
@@ -148,7 +154,6 @@ export default function AboutStory() {
 
       if (reduceMotion) return;
 
-      // Cinematic hero text entrance.
       gsap.from(".about-hero-copy > *", {
         y: 28,
         opacity: 0,
@@ -158,7 +163,6 @@ export default function AboutStory() {
         clearProps: "transform",
       });
 
-      // Keep all looping motion subtle.
       gsap.to(".about-3d-accent", {
         y: -4,
         duration: 2.8,
@@ -168,7 +172,6 @@ export default function AboutStory() {
         stagger: 0.3,
       });
 
-      // Reveal each highlight card as the section enters view.
       gsap.from(".highlight-card", {
         scrollTrigger: {
           trigger: ".about-highlights",
@@ -184,7 +187,6 @@ export default function AboutStory() {
         ease: "power3.out",
       });
 
-      // Gentle floating loop for the cards.
       gsap.to(".highlight-card", {
         y: -3,
         duration: 2.8,
@@ -194,7 +196,6 @@ export default function AboutStory() {
         stagger: 0.22,
       });
 
-      // Video cards reveal with a cinematic stagger.
       gsap.from(".about-video-card", {
         scrollTrigger: {
           trigger: ".about-video-grid",
@@ -209,7 +210,6 @@ export default function AboutStory() {
         ease: "power3.out",
       });
 
-      // Store photo gently moves without affecting layout.
       gsap.to(".about-shop-image", {
         y: -5,
         duration: 3.6,
@@ -218,7 +218,6 @@ export default function AboutStory() {
         yoyo: true,
       });
 
-      // Soft ambient background light drifts slowly.
       gsap.to(".about-ambient-light", {
         x: 22,
         y: -16,
@@ -321,41 +320,62 @@ export default function AboutStory() {
         </div>
 
         <div className="about-video-grid grid grid-cols-1 gap-5 sm:grid-cols-3 sm:gap-4">
-          {services.map((service, index) => (
-            <article key={service.title} className="about-video-card group min-w-0">
-              <div className="relative h-52 overflow-hidden rounded-2xl bg-[#f5f5f7] shadow-[0_8px_24px_rgba(20,20,40,0.07)] transition-shadow duration-300 group-hover:shadow-[0_16px_32px_rgba(20,20,40,0.13)] sm:h-36 lg:h-48">
-                <video
-                  className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="metadata"
-                  aria-label={service.title}
-                >
-                  <source src={VIDEO_PATH} type="video/mp4" />
-                  Your browser does not support HTML video.
-                </video>
+          {services.map((service, index) => {
+            const videoId =
+              service.type === "youtube"
+                ? service.video.split("/embed/")[1]
+                : "";
 
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-white/10"
-                />
+            return (
+              <article
+                key={service.title}
+                className="about-video-card group min-w-0"
+              >
+                <div className="relative h-52 overflow-hidden rounded-2xl bg-[#1E1E1E] shadow-[0_8px_24px_rgba(20,20,40,0.07)] transition-shadow duration-300 group-hover:shadow-[0_16px_32px_rgba(20,20,40,0.13)] sm:h-36 lg:h-48">
+                  {service.type === "youtube" ? (
+                    <iframe
+                      className="h-full w-full"
+                      src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1&loop=1&playlist=${videoId}&controls=0&rel=0`}
+                      title={service.title}
+                      allow="autoplay; encrypted-media; picture-in-picture; web-share"
+                      referrerPolicy="strict-origin-when-cross-origin"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <video
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="metadata"
+                      aria-label={service.title}
+                    >
+                      <source src={service.video} type="video/mp4" />
+                      Your browser does not support HTML video.
+                    </video>
+                  )}
 
-                <span className="absolute left-3 top-3 flex h-7 w-7 items-center justify-center rounded-full border border-white/50 bg-white/80 text-xs font-bold text-[#29242b] shadow-sm backdrop-blur">
-                  0{index + 1}
-                </span>
-              </div>
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-white/10"
+                  />
 
-              <h3 className="mt-3 text-sm font-bold leading-5 tracking-tight sm:text-base">
-                {service.title}
-              </h3>
+                  <span className="pointer-events-none absolute left-3 top-3 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-white/50 bg-white/80 text-xs font-bold text-[#29242b] shadow-sm backdrop-blur">
+                    0{index + 1}
+                  </span>
+                </div>
 
-              <p className="mt-1 text-xs leading-5 text-[#6e6e73] sm:text-sm">
-                {service.description}
-              </p>
-            </article>
-          ))}
+                <h3 className="mt-3 text-sm font-bold leading-5 tracking-tight sm:text-base">
+                  {service.title}
+                </h3>
+
+                <p className="mt-1 text-xs leading-5 text-[#6e6e73] sm:text-sm">
+                  {service.description}
+                </p>
+              </article>
+            );
+          })}
         </div>
       </section>
 

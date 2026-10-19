@@ -2,13 +2,18 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
+import PhoneStorySection from "@/components/PhoneStorySection";
+import IPhoneAirScroll from "@/components/IPhoneAirScroll";
+
 import BrandMarquee from "@/components/BrandMarquee";
 import AboutStory from "@/components/AboutStory"; 
 import TeamCarousel from "@/components/TeamCarousel"; 
 import ContactRequestForm from "@/components/ContactRequestForm";
+import TestimonialsMarquee from "@/components/TestimonialsMarquee";
 import Footer from "@/components/Footer";
 import { SITE_URL } from "@/lib/site-config";
 import CookieNotice from "@/components/CookieNotice";
+
 
 
 export const metadata: Metadata = {
@@ -51,10 +56,13 @@ export default function Home() {
       <Navbar />
       <main id="main-content" className="flex-grow">
         <HeroSection />
+        <PhoneStorySection />
+        <IPhoneAirScroll />
         <BrandMarquee />
         <AboutStory />
         <TeamCarousel />
         <ContactRequestForm /> 
+        <TestimonialsMarquee />
       </main>
       <Footer />
       <CookieNotice />

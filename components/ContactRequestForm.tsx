@@ -8,7 +8,7 @@ import BrandLogo from "@/components/BrandLogo";
 const BUSINESS_PHONE = "919131383323";
 const BUSINESS_PHONE_DISPLAY = "+91 91313 83323";
 const BUSINESS_EMAIL = "mrmobilewala610@gmail.com";
-const OWNER_PORTRAIT = "/contact/owner-portrait.webp";
+const OWNER_PORTRAIT = "/Contact.png";
 
 export type ContactService =
   | "buy"
@@ -43,7 +43,13 @@ type ContactField =
 type SubmissionState = "idle" | "opening" | "prepared" | "blocked";
 
 const inputClass =
-  "mt-2 min-h-12 w-full min-w-0 rounded-xl border border-black/10 bg-white px-3.5 py-3 text-base text-[#191a18] outline-none transition duration-200 placeholder:text-black/40 focus:border-[#e1306c] focus:ring-4 focus:ring-[#e1306c]/10";
+  "mt-2.5 min-h-14 w-full min-w-0 rounded-xl border border-black/15 bg-white px-4 py-3.5 text-base leading-6 text-[#191a18] outline-none transition duration-200 placeholder:text-black/45 placeholder:text-sm focus:border-[#e1306c] focus:ring-4 focus:ring-[#e1306c]/10 sm:text-lg sm:placeholder:text-base";
+
+const labelClass =
+  "block min-w-0 text-sm font-semibold leading-6 text-[#262626] sm:text-base";
+
+const errorClass =
+  "mt-2 block text-sm leading-6 text-red-700";
 
 const serviceStrip = [
   {
@@ -93,7 +99,6 @@ export default function ContactRequestForm({
 
       const next = { ...current };
       delete next[field];
-
       return next;
     });
   }
@@ -114,11 +119,11 @@ export default function ContactRequestForm({
     const nextErrors: Partial<Record<ContactField, string>> = {};
 
     if (!firstName) {
-      nextErrors.firstName = "Enter your first name.";
+      nextErrors.firstName = "Please enter your first name.";
     }
 
     if (!lastName) {
-      nextErrors.lastName = "Enter your last name.";
+      nextErrors.lastName = "Please enter your last name.";
     }
 
     if (email && !emailRef.current?.checkValidity()) {
@@ -139,7 +144,7 @@ export default function ContactRequestForm({
 
     if (message.length < 8) {
       nextErrors.message =
-        "Add a few details so we can point you in the right direction.";
+        "Please add at least a few details about your enquiry.";
     }
 
     if (Object.keys(nextErrors).length > 0) {
@@ -169,7 +174,7 @@ export default function ContactRequestForm({
     }
 
     const serviceLabel = services.find(
-      (option) => option.value === service
+      (option) => option.value === service,
     )?.label;
 
     const whatsAppMessage = [
@@ -201,49 +206,50 @@ export default function ContactRequestForm({
   }
 
   return (
-    <main className="min-h-screen overflow-x-clip bg-[#FAFAF8] px-4 pb-14 pt-24 text-[#191a18] sm:px-8 sm:pb-12 sm:pt-28 lg:px-10">
-      {/* Page heading */}
+    <main className="min-h-screen overflow-x-clip bg-[#FAFAF8] px-4 pb-12 pt-24 text-[#191a18] sm:px-8 sm:pb-14 sm:pt-28 lg:px-10">
       <header className="mx-auto max-w-3xl text-center">
-        <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#e1306c] sm:text-xs">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#e1306c] sm:text-sm sm:tracking-[0.25em]">
           Buy · Sell · Repair
         </p>
 
-        <h1 className="contact-heading-3d mx-auto mt-4 max-w-3xl text-[clamp(2.5rem,6vw,4.5rem)] font-extrabold leading-[0.98] tracking-[-0.065em]">
+        <h1 className="contact-heading-3d mx-auto mt-4 max-w-3xl text-[clamp(2.4rem,7vw,4.5rem)] font-extrabold leading-[1.02] tracking-[-0.055em]">
           Your Phone. Your Needs.
           <span className="contact-heading-accent block">
             Our Expertise.
           </span>
         </h1>
 
-        <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-black/60 sm:text-base sm:leading-7">
+        <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-black/65 sm:text-lg sm:leading-8">
           From buying a new phone to getting it repaired, we make it easy for you.
         </p>
       </header>
 
-      {/* Main contact card */}
       <section
         aria-label="Contact MR Mobile Wala"
         className="mx-auto mt-7 grid w-full max-w-6xl overflow-hidden rounded-2xl border border-black/[0.08] bg-white shadow-[0_24px_80px_rgba(35,20,45,0.09)] sm:mt-10 sm:rounded-3xl lg:grid-cols-[1.1fr_0.9fr]"
       >
-        {/* Enquiry form */}
         <div className="min-w-0 p-5 sm:p-8 lg:p-10">
-          <div className="mb-6">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#e1306c]">
+          <div className="mb-7 sm:mb-8">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#e1306c] sm:text-sm">
               Let&apos;s talk
             </p>
 
-            <h2 className="mt-2 text-xl font-bold tracking-[-0.04em] sm:text-2xl">
+            <h2 className="mt-2.5 text-2xl font-bold tracking-[-0.035em] sm:text-3xl">
               Send us an enquiry
             </h2>
 
-            <p className="mt-2 text-sm leading-6 text-black/55">
+            <p className="mt-2.5 text-base leading-7 text-black/60 sm:text-lg">
               Share a few details and we&apos;ll take it from there.
             </p>
           </div>
 
-          <form noValidate onSubmit={submitForm} className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <label className="block min-w-0 text-xs font-semibold text-black/75">
+          <form
+            noValidate
+            onSubmit={submitForm}
+            className="space-y-5 sm:space-y-6"
+          >
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-4">
+              <label className={labelClass}>
                 First name
                 <input
                   ref={firstNameRef}
@@ -265,14 +271,14 @@ export default function ContactRequestForm({
                   <span
                     id="first-name-error"
                     role="alert"
-                    className="mt-1.5 block text-xs leading-5 text-red-700"
+                    className={errorClass}
                   >
                     {errors.firstName}
                   </span>
                 )}
               </label>
 
-              <label className="block min-w-0 text-xs font-semibold text-black/75">
+              <label className={labelClass}>
                 Last name
                 <input
                   ref={lastNameRef}
@@ -294,7 +300,7 @@ export default function ContactRequestForm({
                   <span
                     id="last-name-error"
                     role="alert"
-                    className="mt-1.5 block text-xs leading-5 text-red-700"
+                    className={errorClass}
                   >
                     {errors.lastName}
                   </span>
@@ -302,9 +308,11 @@ export default function ContactRequestForm({
               </label>
             </div>
 
-            <label className="block text-xs font-semibold text-black/75">
+            <label className={labelClass}>
               Email address{" "}
-              <span className="font-normal text-black/45">(optional)</span>
+              <span className="font-normal text-black/55">
+                (optional)
+              </span>
 
               <input
                 ref={emailRef}
@@ -324,14 +332,14 @@ export default function ContactRequestForm({
                 <span
                   id="email-error"
                   role="alert"
-                  className="mt-1.5 block text-xs leading-5 text-red-700"
+                  className={errorClass}
                 >
                   {errors.email}
                 </span>
               )}
             </label>
 
-            <label className="block text-xs font-semibold text-black/75">
+            <label className={labelClass}>
               Phone / WhatsApp number
 
               <input
@@ -341,7 +349,7 @@ export default function ContactRequestForm({
                 type="tel"
                 autoComplete="tel"
                 inputMode="tel"
-                placeholder="Include your country code if outside India"
+                placeholder="+91 98765 43210"
                 maxLength={20}
                 required
                 aria-invalid={Boolean(errors.phone)}
@@ -349,18 +357,22 @@ export default function ContactRequestForm({
                 onChange={() => clearError("phone")}
               />
 
+              <span className="mt-2 block text-sm font-normal leading-6 text-black/55">
+                Include your country code if you are outside India.
+              </span>
+
               {errors.phone && (
                 <span
                   id="phone-error"
                   role="alert"
-                  className="mt-1.5 block text-xs leading-5 text-red-700"
+                  className={errorClass}
                 >
                   {errors.phone}
                 </span>
               )}
             </label>
 
-            <label className="block text-xs font-semibold text-black/75">
+            <label className={labelClass}>
               What can we help with?
 
               <select
@@ -380,16 +392,16 @@ export default function ContactRequestForm({
               </select>
             </label>
 
-            <label className="block text-xs font-semibold text-black/75">
+            <label className={labelClass}>
               Message / phone details
 
               <textarea
                 ref={messageRef}
-                className={`${inputClass} min-h-32 resize-y`}
+                className={`${inputClass} min-h-40 resize-y leading-7`}
                 name="message"
                 placeholder={messagePlaceholders[service]}
                 maxLength={1000}
-                rows={4}
+                rows={5}
                 required
                 aria-invalid={Boolean(errors.message)}
                 aria-describedby={
@@ -398,11 +410,15 @@ export default function ContactRequestForm({
                 onChange={() => clearError("message")}
               />
 
+              <span className="mt-2 block text-sm font-normal leading-6 text-black/55">
+                Add your phone model, budget, or details about the problem.
+              </span>
+
               {errors.message && (
                 <span
                   id="message-error"
                   role="alert"
-                  className="mt-1.5 block text-xs leading-5 text-red-700"
+                  className={errorClass}
                 >
                   {errors.message}
                 </span>
@@ -412,17 +428,17 @@ export default function ContactRequestForm({
             <button
               type="submit"
               disabled={submissionState === "opening"}
-              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#ff792d] via-[#e1306c] to-[#833ab4] px-5 py-3 text-sm font-bold text-white shadow-[0_8px_24px_rgba(225,48,108,0.2)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(225,48,108,0.3)] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#833ab4] disabled:cursor-wait disabled:opacity-75 sm:min-h-14"
+              className="flex min-h-14 w-full items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-[#ff792d] via-[#e1306c] to-[#833ab4] px-5 py-4 text-base font-bold text-white shadow-[0_8px_24px_rgba(225,48,108,0.2)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(225,48,108,0.3)] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#833ab4] disabled:cursor-wait disabled:opacity-75 sm:min-h-16 sm:text-lg"
             >
               {submissionState === "opening"
                 ? "Opening WhatsApp…"
-                : "Send enquiry"}
+                : "Send enquiry on WhatsApp"}
 
               {submissionState !== "opening" && (
                 <svg
                   aria-hidden="true"
-                  width="17"
-                  height="17"
+                  width="20"
+                  height="20"
                   viewBox="0 0 16 16"
                   fill="none"
                 >
@@ -437,15 +453,15 @@ export default function ContactRequestForm({
               )}
             </button>
 
-            <p className="text-center text-xs leading-5 text-black/50">
-              Your message opens in WhatsApp. Review it and tap Send there.
+            <p className="text-center text-sm leading-6 text-black/55">
+              WhatsApp will open with your message ready to review and send.
             </p>
 
             {submissionState === "prepared" && (
               <p
                 role="status"
                 aria-live="polite"
-                className="text-sm leading-6 text-[#c02670]"
+                className="text-base leading-7 text-[#c02670]"
               >
                 WhatsApp opened in a new tab. Your enquiry is not sent yet;
                 review it and press Send in WhatsApp.
@@ -456,7 +472,7 @@ export default function ContactRequestForm({
               <div
                 role="status"
                 aria-live="polite"
-                className="text-sm leading-6 text-[#c02670]"
+                className="text-base leading-7 text-[#c02670]"
               >
                 <p>
                   Your browser blocked the new tab. Open WhatsApp to review
@@ -467,7 +483,7 @@ export default function ContactRequestForm({
                   href={whatsAppUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-2 inline-flex min-h-11 items-center font-semibold underline underline-offset-4"
+                  className="mt-3 inline-flex min-h-12 items-center font-semibold underline underline-offset-4"
                 >
                   Open WhatsApp ↗
                 </a>
@@ -476,9 +492,7 @@ export default function ContactRequestForm({
           </form>
         </div>
 
-        {/* Portrait panel */}
         <aside className="contact-portrait-panel relative isolate flex min-w-0 flex-col justify-between overflow-hidden border-t border-white/20 p-5 text-white sm:p-8 lg:border-l lg:border-t-0 lg:p-10">
-          {/* Owner's actual portrait */}
           <Image
             src={OWNER_PORTRAIT}
             alt="Ainul Khan, owner of MR Mobile Wala"
@@ -488,16 +502,14 @@ export default function ContactRequestForm({
             className="contact-owner-portrait -z-20 object-cover object-center"
           />
 
-          {/* Pink-purple overlay keeps white text readable */}
           <div
             aria-hidden="true"
-            className="absolute inset-0 -z-10 bg-gradient-to-br from-[#70249c]/90 via-[#d92e78]/85 to-[#ff7043]/90"
+            className="pointer-events-none absolute inset-0 -z-10 bg-black/25"
           />
 
-          {/* Soft cinematic light */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_75%_18%,rgba(255,255,255,0.22),transparent_42%),linear-gradient(to_top,rgba(36,12,40,0.45),transparent_65%)]"
+            className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_top,rgba(0,0,0,0.45),transparent_65%)]"
           />
 
           <div className="relative">
@@ -510,41 +522,20 @@ export default function ContactRequestForm({
               imageClassName="!w-[156px] sm:!w-[176px]"
             />
 
-            <p className="mt-7 text-[10px] font-bold uppercase tracking-[0.25em] text-white/85">
-              MR Mobile Wala
+            <p className="mt-7 text-xs font-bold uppercase tracking-[0.2em] text-white/90 sm:text-sm">
+              Farhan Ansari, Owner
             </p>
-
-            <p className="mt-2 text-sm font-medium text-white">
-              Contact person: Ainul Khan
-            </p>
-
-            <h2 className="contact-panel-heading mt-5 max-w-[15ch] text-[clamp(2.2rem,5vw,3.5rem)] font-extrabold leading-[0.98] tracking-[-0.065em]">
-              Your next phone,
-              <span className="block text-white/85">
-                without the guesswork.
-              </span>
-            </h2>
-
-            <p className="mt-5 max-w-md text-sm leading-7 text-white/90 sm:text-base">
-              Straightforward guidance for buying, selling, repairing,
-              or finding accessories for the phone you use.
-            </p>
-
-            <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-white shadow-sm backdrop-blur-md">
-              <span className="h-1.5 w-1.5 rounded-full bg-white" />
-              Personal service · Real people
-            </div>
           </div>
 
           <div className="relative mt-12">
-            <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.22em] text-white/80">
+            <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-white/85 sm:text-sm">
               Get in touch directly
             </p>
 
             <div className="divide-y divide-white/25 border-y border-white/25">
               <a
                 href={`tel:+${BUSINESS_PHONE}`}
-                className="flex min-h-14 items-center justify-between gap-4 py-3 text-sm transition hover:translate-x-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                className="flex min-h-16 items-center justify-between gap-4 py-4 text-base transition hover:translate-x-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
                 <span className="text-white/85">Call</span>
                 <span className="text-right font-semibold">
@@ -556,7 +547,7 @@ export default function ContactRequestForm({
                 href={`https://wa.me/${BUSINESS_PHONE}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex min-h-14 items-center justify-between gap-4 py-3 text-sm transition hover:translate-x-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                className="flex min-h-16 items-center justify-between gap-4 py-4 text-base transition hover:translate-x-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
                 <span className="text-white/85">WhatsApp</span>
                 <span className="text-right font-semibold">
@@ -566,7 +557,7 @@ export default function ContactRequestForm({
 
               <a
                 href={`mailto:${BUSINESS_EMAIL}`}
-                className="flex min-h-14 items-center justify-between gap-4 py-3 text-sm transition hover:translate-x-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                className="flex min-h-16 items-center justify-between gap-4 py-4 text-base transition hover:translate-x-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
                 <span className="text-white/85">Email</span>
                 <span className="break-all text-right font-semibold">
@@ -575,36 +566,35 @@ export default function ContactRequestForm({
               </a>
             </div>
 
-            <p className="mt-4 text-xs leading-5 text-white/75">
+            <p className="mt-4 text-sm leading-6 text-white/80">
               Business hours: Please call or WhatsApp to confirm availability.
             </p>
           </div>
         </aside>
       </section>
 
-      {/* Service highlights */}
       <section
         aria-labelledby="contact-services-title"
-        className="mx-auto mt-10 w-full max-w-6xl border-t border-black/10 pt-7 sm:mt-12 sm:pt-8"
+        className="mx-auto mt-10 w-full max-w-6xl border-t border-black/10 pt-8 sm:mt-12 sm:pt-10"
       >
         <h2
           id="contact-services-title"
-          className="text-center text-[10px] font-bold uppercase tracking-[0.23em] text-black/50"
+          className="text-center text-xs font-extrabold uppercase tracking-[0.2em] text-[#1E1E1E] sm:text-sm"
         >
           Here for your next step
         </h2>
 
-        <ul className="mt-6 grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-4 sm:gap-4">
+        <ul className="mx-auto mt-7 grid w-full max-w-3xl grid-cols-2 gap-x-5 gap-y-5 sm:grid-cols-4 sm:gap-4">
           {serviceStrip.map((item) => (
             <li
               key={item.label}
-              className="flex min-w-0 items-center justify-center gap-2.5 text-center text-xs font-semibold text-black/70 sm:text-sm"
+              className="flex min-w-0 items-center justify-start gap-3 text-left text-sm font-bold leading-6 text-[#1E1E1E] sm:justify-center sm:text-base"
             >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#e1306c]/20 bg-white text-[#e1306c] shadow-sm">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-[#1E1E1E]/15 bg-white text-[#1E1E1E] shadow-sm">
                 <svg
                   aria-hidden="true"
-                  width="18"
-                  height="18"
+                  width="20"
+                  height="20"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -616,7 +606,7 @@ export default function ContactRequestForm({
                 </svg>
               </span>
 
-              <span>{item.label}</span>
+              <span className="min-w-0">{item.label}</span>
             </li>
           ))}
         </ul>
@@ -646,22 +636,13 @@ export default function ContactRequestForm({
         }
 
         .contact-portrait-panel {
-          background: linear-gradient(
-            135deg,
-            #833ab4,
-            #e1306c,
-            #ff792d
-          );
+          background: transparent;
           isolation: isolate;
         }
 
         .contact-owner-portrait {
           transform: scale(1.01);
           object-position: center 25%;
-        }
-
-        .contact-panel-heading {
-          text-shadow: 0 3px 18px rgba(48, 12, 42, 0.16);
         }
 
         @media (min-width: 1024px) {

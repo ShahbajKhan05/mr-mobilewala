@@ -1,5 +1,6 @@
+
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Manrope, Geist } from "next/font/google";
 import SmoothScroll from "@/components/SmoothScroll";
 import {
   BRAND_LOGO_PATH,
@@ -9,10 +10,14 @@ import {
   SITE_URL,
 } from "@/lib/site-config";
 import "./globals.css";
+import { cn } from "@/lib/utils";
 
-const geist = Geist({
-  variable: "--font-geist-sans",
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -88,7 +93,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${geist.variable} h-full antialiased`}>
+    <html lang="en" className={cn("h-full", "antialiased", manrope.variable, "font-sans", geist.variable)}>
       <body className="min-h-full">
         <script
           type="application/ld+json"
@@ -96,6 +101,7 @@ export default function RootLayout({
             __html: JSON.stringify(organizationJsonLd).replace(/</g, "\\u003c"),
           }}
         />
+
         {websiteJsonLd && (
           <script
             type="application/ld+json"
@@ -104,6 +110,7 @@ export default function RootLayout({
             }}
           />
         )}
+
         <SmoothScroll>{children}</SmoothScroll>
       </body>
     </html>
